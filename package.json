@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test 'src/**/*.test.ts'",
     "regtest": "./infra/regtest.sh",
-    "demo:sp": "tsx scripts/sp-baseline.ts"
+    "demo:sp": "tsx scripts/sp-baseline.ts",
+    "demo:payjoin": "tsx scripts/payjoin-demo.ts"
   },
   "license": "MIT",
   "dependencies": {

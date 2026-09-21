@@ -9,6 +9,7 @@ Built for the Bitshala BOSS Battle hackathon, Cypherpunk track.
 ## Status
 
 - **Phase 0 — validate + environment: done.** See `docs/phase-0.md`.
+- **Phase 1 — BIP78 PayJoin core (plain addresses): done.** See `docs/phase-1.md`. `npm run demo:payjoin`
 
 ## Layout
 
