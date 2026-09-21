@@ -1,0 +1,29 @@
+{
+  "name": "sp-payjoin",
+  "version": "0.0.1",
+  "private": true,
+  "description": "PayJoin (BIP78) with silent payment (BIP352) addressing — private by default",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test 'src/**/*.test.ts'",
+    "regtest": "./infra/regtest.sh",
+    "demo:sp": "tsx scripts/sp-baseline.ts"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@silent-pay/core": "^0.0.6",
+    "bip66": "^2.0.0",
+    "bitcoinjs-lib": "^6.1.8",
+    "ecpair": "^3.0.2",
+    "tiny-secp256k1": "^2.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
+  }
+}

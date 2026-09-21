@@ -1,0 +1,3 @@
+node_modules/
+infra/bitcoin/regtest/
+*.log
