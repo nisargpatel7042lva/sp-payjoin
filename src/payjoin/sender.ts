@@ -37,7 +37,7 @@ export function createOriginalPsbt(signed: Psbt): Psbt {
   const original = Psbt.fromBase64(signed.toBase64());
   if (original.data.inputs.every(isFinalized)) throw new PayjoinSenderError('The original PSBT should not be finalized.');
   original.finalizeAllInputs();
-  original.data.inputs.forEach((i) => { delete i.bip32Derivation; delete i.partialSig; delete i.unknownKeyVals; delete i.tapBip32Derivation; });
+  original.data.inputs.forEach((i) => { delete i.bip32Derivation; delete i.partialSig; delete i.tapKeySig; delete i.tapScriptSig; delete i.tapInternalKey; delete i.unknownKeyVals; delete i.tapBip32Derivation; });
   original.data.outputs.forEach((o) => { delete o.bip32Derivation; delete o.unknownKeyVals; delete o.tapBip32Derivation; });
   delete original.data.globalMap.globalXpub;
   return original;

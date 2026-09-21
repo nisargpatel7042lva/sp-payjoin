@@ -69,3 +69,18 @@ for (const v of vectors) {
 }
 
 test('sumInputPublicKeys of no keys is undefined', () => { assert.equal(sumInputPublicKeys([]), undefined); });
+
+// Receiver-side deriveOutput must reproduce every expected output for k = 0..n-1 (unlabelled vectors).
+import { deriveOutput } from './keys.js';
+for (const v of vectors) {
+  test(`deriveOutput: ${v.comment}`, () => {
+    for (const r of v.receiving) {
+      if (r.given.labels.length > 0 || r.expected.outputs.length === 0) continue;
+      const ctx = derivationContext(r.given.vin.map(view));
+      if (!ctx) continue;
+      const keys = { scanPriv: bytes(r.given.key_material.scan_priv_key), spendPriv: bytes(r.given.key_material.spend_priv_key), scanPub: ecc.pointFromScalar(bytes(r.given.key_material.scan_priv_key), true)!, spendPub: ecc.pointFromScalar(bytes(r.given.key_material.spend_priv_key), true)! };
+      const derived = r.expected.outputs.map((_, k) => hex(deriveOutput(keys, ctx.sumPubkeys, ctx.inputHash, k).xOnly)).sort();
+      assert.deepEqual(derived, r.expected.outputs.map((o) => o.pub_key).sort());
+    }
+  });
+}

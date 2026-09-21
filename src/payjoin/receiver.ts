@@ -11,8 +11,13 @@ import type { KeyedUtxo } from '../wallet/simple.js';
 export interface ReceiverHooks {
   /** Non-interactive receivers must check the original tx is broadcastable (probing defence). */
   isBroadcastable(txHex: string): Promise<boolean>;
-  /** Is this scriptPubKey ours? Used to reject our own inputs and to identify our outputs. */
+  /** Is this scriptPubKey ours? Used to reject our own inputs (and, without `identifyOutputs`, to find our outputs). */
   isOwnedScript(scriptPubKey: Uint8Array): Promise<boolean> | boolean;
+  /**
+   * Optional: which outputs of the original pay us, given the whole transaction.
+   * Silent-payment receivers need the inputs to recognise their outputs.
+   */
+  identifyOutputs?(ctx: { inputs: ProposalInput[]; outputs: Array<{ index: number; scriptPubKey: Uint8Array; valueSat: number }> }): Promise<number[]> | number[];
   /** Probing / reentrancy defence: has this outpoint been seen in a previous original PSBT? */
   inputSeenBefore(outpoint: string): Promise<boolean> | boolean;
   markInputSeen(outpoint: string): Promise<void> | void;
@@ -22,10 +27,14 @@ export interface ReceiverHooks {
   signInput(psbt: Psbt, idx: number, utxo: KeyedUtxo): Promise<void> | void;
   /**
    * Optional: payment output substitution (BIP78 §"Payment output substitution").
-   * Receives our output and the final input set; returns a replacement scriptPubKey or undefined.
+   * Called once per output of ours with the FINAL input set (ours included, in final order);
+   * returns a replacement scriptPubKey or undefined to keep it.
    */
-  substituteOutput?(ctx: { script: Uint8Array; valueSat: number; inputs: Array<{ txid: string; vout: number; scriptPubKey: Uint8Array }> }): Promise<Uint8Array | undefined> | Uint8Array | undefined;
+  substituteOutput?(ctx: { index: number; ourOutputs: number[]; script: Uint8Array; valueSat: number; inputs: ProposalInput[] }): Promise<Uint8Array | undefined> | Uint8Array | undefined;
 }
+
+/** An input as the receiver sees it: outpoint, prevout script, and (for the sender's inputs) the original witness/scriptSig. */
+export interface ProposalInput { txid: string; vout: number; scriptPubKey: Uint8Array; witness: string[]; scriptSigHex: string; ours: boolean }
 
 export interface ReceiverOptions {
   supportedVersions?: number[];
@@ -79,8 +88,13 @@ export class PayjoinReceiver {
     }
     for (let k = 0; k < originalTx.ins.length; k++) await this.hooks.markInputSeen(`${Buffer.from(originalTx.ins[k]!.hash).reverse().toString('hex')}:${originalTx.ins[k]!.index}`);
 
-    const ourOutputs: number[] = [];
-    for (let k = 0; k < originalTx.outs.length; k++) if (await this.hooks.isOwnedScript(originalTx.outs[k]!.script)) ourOutputs.push(k);
+    const originalInputs: ProposalInput[] = originalTx.ins.map((i, k) => ({ txid: Buffer.from(i.hash).reverse().toString('hex'), vout: i.index, scriptPubKey: prevScripts[k]!, witness: i.witness.map((w) => Buffer.from(w).toString('hex')), scriptSigHex: Buffer.from(i.script).toString('hex'), ours: false }));
+    let ourOutputs: number[] = [];
+    if (this.hooks.identifyOutputs) {
+      ourOutputs = [...(await this.hooks.identifyOutputs({ inputs: originalInputs, outputs: originalTx.outs.map((o, k) => ({ index: k, scriptPubKey: new Uint8Array(o.script), valueSat: Number(o.value) })) }))].sort((a, b) => a - b);
+    } else {
+      for (let k = 0; k < originalTx.outs.length; k++) if (await this.hooks.isOwnedScript(originalTx.outs[k]!.script)) ourOutputs.push(k);
+    }
     if (ourOutputs.length === 0) throw new PayjoinReceiverError('original-psbt-rejected', 'no output pays the receiver');
     const ourOutputIndex = ourOutputs[0]!;
 
@@ -104,12 +118,14 @@ export class PayjoinReceiver {
     const sequence = originalTx.ins[0]!.sequence;
 
     // ── output substitution (optional) ──────────────────────────────────────
-    let ourScript: Uint8Array = originalTx.outs[ourOutputIndex]!.script;
+    const scripts = new Map<number, Uint8Array>(ourOutputs.map((k) => [k, new Uint8Array(originalTx.outs[k]!.script)]));
     if (!disableSubstitution && this.hooks.substituteOutput) {
-      const inputs: Array<{ txid: string; vout: number; scriptPubKey: Uint8Array }> = originalTx.ins.map((i, k) => ({ txid: Buffer.from(i.hash).reverse().toString('hex'), vout: i.index, scriptPubKey: prevScripts[k]! }));
-      inputs.splice(ourInputIndex, 0, { txid: contributed.txid, vout: contributed.vout, scriptPubKey: new Uint8Array(contributed.scriptPubKey) });
-      const replacement = await this.hooks.substituteOutput({ script: ourScript, valueSat: Number(originalTx.outs[ourOutputIndex]!.value), inputs });
-      if (replacement) ourScript = replacement;
+      const inputs = [...originalInputs];
+      inputs.splice(ourInputIndex, 0, { txid: contributed.txid, vout: contributed.vout, scriptPubKey: new Uint8Array(contributed.scriptPubKey), witness: [], scriptSigHex: '', ours: true });
+      for (const k of ourOutputs) {
+        const replacement = await this.hooks.substituteOutput({ index: k, ourOutputs, script: scripts.get(k)!, valueSat: Number(originalTx.outs[k]!.value), inputs });
+        if (replacement) scripts.set(k, replacement);
+      }
     }
 
     // ── build the proposal ──────────────────────────────────────────────────
@@ -121,7 +137,7 @@ export class PayjoinReceiver {
       for (const i of ins) p.addInput({ hash: i.hash, index: i.index, sequence: i.sequence, witnessUtxo: { script: Buffer.from(i.witnessUtxo.script), value: Number(i.witnessUtxo.value) } });
       originalTx.outs.forEach((o, k) => {
         const value = k === ourOutputIndex ? ourOutputValue : k === feeOutputIndex && feeOutputValue !== undefined ? feeOutputValue : Number(o.value);
-        p.addOutput({ script: k === ourOutputIndex ? Buffer.from(ourScript) : Buffer.from(o.script), value });
+        p.addOutput({ script: Buffer.from(scripts.get(k) ?? o.script), value });
       });
       return p;
     };

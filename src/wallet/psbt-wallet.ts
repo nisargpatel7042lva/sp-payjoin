@@ -1,15 +1,15 @@
 /**
  * PSBT construction and signing for wallet-held keys.
  *   P2WPKH inputs: signed through bitcoinjs (partialSig), finalizable by the standard finalizer.
- *   P2TR inputs:   BIP340 key-path signature computed here and written as finalScriptWitness
- *                  (covers silent-payment outputs whose output key is P_k with no BIP341 tweak).
+ *   P2TR inputs:   BIP340 key-path signature over the *output key's* private key, written as
+ *                  tapKeySig (covers silent-payment outputs: P_k is the output key, no BIP341 tweak).
  */
 import * as ecc from 'tiny-secp256k1';
 import { ECPairFactory } from 'ecpair';
 import { Psbt, Transaction, initEccLib } from 'bitcoinjs-lib';
 import { randomBytes } from 'node:crypto';
 import type { KeyedUtxo, TxOut } from './simple.js';
-import { unsignedTx, witnessToBytes } from '../payjoin/psbt-utils.js';
+import { unsignedTx } from '../payjoin/psbt-utils.js';
 
 initEccLib(ecc);
 const ECPair = ECPairFactory(ecc);
@@ -39,10 +39,10 @@ export function signPsbtInput(psbt: Psbt, idx: number, utxo: KeyedUtxo): void {
   const prevValues = psbt.data.inputs.map((i) => Number(i.witnessUtxo!.value));
   const hash = tx.hashForWitnessV1(idx, prevScripts, prevValues, Transaction.SIGHASH_DEFAULT);
   const sig = ecc.signSchnorr(hash, utxo.priv, randomBytes(32));
-  psbt.updateInput(idx, { finalScriptWitness: witnessToBytes([sig]) });
+  psbt.updateInput(idx, { tapKeySig: Buffer.from(sig) }); // SIGHASH_DEFAULT: 64-byte sig; finalizer builds the witness
 }
 
-/** Finalizes inputs that still need it (P2TR inputs are already final after signing). */
+/** Finalizes every input that is not yet finalized. */
 export function finalizePsbt(psbt: Psbt): Psbt {
   psbt.data.inputs.forEach((i, k) => { if (!i.finalScriptWitness && !i.finalScriptSig) psbt.finalizeInput(k); });
   return psbt;

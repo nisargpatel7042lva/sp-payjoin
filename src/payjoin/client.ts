@@ -11,12 +11,16 @@ import { buildPsbt, extractTx, finalizePsbt, signPsbtInput } from '../wallet/psb
 import { finalizedTx, psbtFee } from './psbt-utils.js';
 import type { KeyedUtxo, TxOut } from '../wallet/simple.js';
 import { address as baddress, networks, type Network } from 'bitcoinjs-lib';
+import { silentPaymentOutputs } from '../sp/send.js';
 
 export interface PayjoinSendParams {
   uri: string | PjUri;
   inputs: KeyedUtxo[];
-  /** The payment output (to the URI address) and any change/batch outputs, in the order they should appear. */
-  outputs: TxOut[];
+  /**
+   * Outputs in order. For a silent-payment URI, put a placeholder `{ sp: true, valueSat }` at the
+   * payment position: the P2TR script is derived from `inputs` (BIP352) before signing.
+   */
+  outputs: Array<TxOut | { sp: true; valueSat: number }>;
   paymentOutputIndex: number;
   params?: SenderOptionalParams;
   network?: Network;
@@ -38,10 +42,26 @@ export async function payWithPayjoin(p: PayjoinSendParams): Promise<PayjoinSendR
   const uri = typeof p.uri === 'string' ? parsePjUri(p.uri) : p.uri;
   const log = p.log ?? (() => {});
   const network = p.network ?? networks.regtest;
-  const paymentScript = uri.address ? new Uint8Array(baddress.toOutputScript(uri.address, network)) : p.outputs[p.paymentOutputIndex]!.scriptPubKey;
+  // Resolve silent-payment placeholders: derive the BIP352 output(s) from our inputs.
+  let outputs: TxOut[];
+  if (uri.sp) {
+    const spOuts = silentPaymentOutputs({
+      keys: p.inputs.map((u) => ({ priv: u.priv, isTaproot: u.type === 'p2tr' })),
+      outpoints: p.inputs.map((u) => ({ txid: u.txid, vout: u.vout })),
+      payments: p.outputs.filter((o): o is { sp: true; valueSat: number } => 'sp' in o).map((o) => ({ address: uri.sp!, amountSat: o.valueSat })),
+      network,
+    });
+    let k = 0;
+    outputs = p.outputs.map((o) => ('sp' in o ? { scriptPubKey: spOuts[k++]!.scriptPubKey, valueSat: o.valueSat } : o));
+    log(`silent payment: derived ${spOuts.length} P2TR output(s) for ${uri.sp.slice(0, 14)}… from ${p.inputs.length} input(s)`);
+  } else {
+    if (p.outputs.some((o) => 'sp' in o)) throw new Error('sp placeholder output but URI has no silent payment address');
+    outputs = p.outputs as TxOut[];
+  }
+  const paymentScript = uri.address ? new Uint8Array(baddress.toOutputScript(uri.address, network)) : outputs[p.paymentOutputIndex]!.scriptPubKey;
 
   // 1. signed (unfinalized) PSBT, as a normal wallet would prepare to pay.
-  const signed = buildPsbt(p.inputs, p.outputs);
+  const signed = buildPsbt(p.inputs, outputs);
   p.inputs.forEach((u, k) => signPsbtInput(signed, k, u));
   const params: SenderOptionalParams = p.params ?? {};
   const ctx = createSenderContext(signed, uri, paymentScript, params);

@@ -44,7 +44,7 @@ test('regtest: payjoin confirms with one input from each party; sender got the r
     assert.equal(r.payjoin, true);
     await rpc.mine(1);
     const tx = await withPrevouts(rpc, await rpc.getRawTransaction(r.txid));
-    assert.equal(tx.confirmations, 1);
+    assert.ok((tx.confirmations ?? 0) >= 1, 'confirmed'); // other test files mine concurrently
     const ins = tx.vin.map((v) => `${v.txid}:${v.vout}`);
     assert.ok(ins.includes(`${s.senderUtxo.txid}:${s.senderUtxo.vout}`), 'sender input present');
     assert.ok(ins.includes(`${s.receiverUtxo.txid}:${s.receiverUtxo.vout}`), 'receiver input present');
