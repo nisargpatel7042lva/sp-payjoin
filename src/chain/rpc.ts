@@ -26,6 +26,10 @@ export class BitcoinRpc {
   getRawTransaction(txid: string) { return this.call<DecodedTx>('getrawtransaction', txid, true); }
   sendRawTransaction(hex: string) { return this.call<string>('sendrawtransaction', hex); }
   testMempoolAccept(hex: string) { return this.call<Array<{ allowed: boolean; 'reject-reason'?: string }>>('testmempoolaccept', [hex]); }
+  getBlockHash(height: number) { return this.call<string>('getblockhash', height); }
+  /** Verbosity 3: transactions with `prevout` on every non-coinbase input (what SP scanning needs). */
+  getBlock(hash: string) { return this.call<{ height: number; tx: DecodedTx[] }>('getblock', hash, 3); }
+  scanTxOutSet(descriptors: string[]) { return this.call<{ success: boolean; unspents: Array<{ txid: string; vout: number; scriptPubKey: string; amount: number; height: number }> }>('scantxoutset', 'start', descriptors); }
   getTxOut(txid: string, vout: number) { return this.call<{ value: number; scriptPubKey: { hex: string } } | null>('gettxout', txid, vout, true); }
   /** Miner wallet helpers */
   mine(n = 1) { return this.forWallet('miner').call<string[]>('generatetoaddress', n, '__ADDR__').catch(async () => { const a = await this.forWallet('miner').call<string>('getnewaddress'); return this.call<string[]>('generatetoaddress', n, a); }); }

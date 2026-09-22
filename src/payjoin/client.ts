@@ -4,7 +4,7 @@
  * original transaction (BIP78: the original MUST be broadcastable).
  */
 import { Psbt, Transaction } from 'bitcoinjs-lib';
-import { parsePjUri, type PjUri } from './uri.js';
+import { parseDestination, type Destination } from './uri.js';
 import { buildRequestUrl, checkMinFeeRate, createSenderContext, verifyAndFillProposal, type SenderOptionalParams } from './sender.js';
 import { postOriginalPsbt } from './http.js';
 import { buildPsbt, extractTx, finalizePsbt, signPsbtInput } from '../wallet/psbt-wallet.js';
@@ -14,7 +14,8 @@ import { address as baddress, networks, type Network } from 'bitcoinjs-lib';
 import { silentPaymentOutputs } from '../sp/send.js';
 
 export interface PayjoinSendParams {
-  uri: string | PjUri;
+  /** Bare SP address, bare on-chain address, or BIP21 URI (with or without `pj=`). */
+  uri: string | Destination;
   inputs: KeyedUtxo[];
   /**
    * Outputs in order. For a silent-payment URI, put a placeholder `{ sp: true, valueSat }` at the
@@ -39,7 +40,7 @@ export interface PayjoinSendResult {
 }
 
 export async function payWithPayjoin(p: PayjoinSendParams): Promise<PayjoinSendResult> {
-  const uri = typeof p.uri === 'string' ? parsePjUri(p.uri) : p.uri;
+  const uri = typeof p.uri === 'string' ? parseDestination(p.uri) : p.uri;
   const log = p.log ?? (() => {});
   const network = p.network ?? networks.regtest;
   // Resolve silent-payment placeholders: derive the BIP352 output(s) from our inputs.
@@ -69,7 +70,15 @@ export async function payWithPayjoin(p: PayjoinSendParams): Promise<PayjoinSendR
   const originalBase64 = ctx.originalPsbt.toBase64();
   log(`original tx ${originalTx.getId()} fee ${ctx.originalFee} sat (${ctx.originalFeeRate.toFixed(2)} sat/vB), ${originalTx.ins.length} in / ${originalTx.outs.length} out`);
 
-  // 2. POST to the payjoin endpoint; fall back to the original on any failure.
+  // 2. POST to the payjoin endpoint; fall back to the original whenever payjoin
+  //    is not possible — no endpoint advertised, endpoint down, or a bad proposal.
+  //    The original is a complete payment on its own (and, for an `sp=` destination,
+  //    a normal silent payment), so the payer never has to choose a protocol.
+  if (!uri.pj) {
+    log('receiver advertises no payjoin endpoint; sending directly');
+    const txid = await p.broadcast(originalTx.toHex());
+    return { txid, payjoin: false, tx: originalTx, originalTxid: originalTx.getId(), originalBase64, reason: 'no payjoin endpoint advertised' };
+  }
   let proposalBase64: string;
   try {
     proposalBase64 = await postOriginalPsbt(buildRequestUrl(uri.pj, params), originalBase64);

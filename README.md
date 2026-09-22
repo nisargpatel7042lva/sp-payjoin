@@ -11,6 +11,7 @@ Built for the Bitshala BOSS Battle hackathon, Cypherpunk track.
 - **Phase 0 — validate + environment: done.** See `docs/phase-0.md`.
 - **Phase 1 — BIP78 PayJoin core (plain addresses): done.** See `docs/phase-1.md`. `npm run demo:payjoin`
 - **Phase 2 — silent payment addressing: done.** See `docs/phase-2.md`. `npm run demo:sp-payjoin`
+- **Phase 3 — private by default (CLI, two parties): done.** See `docs/phase-3.md`. `npm run demo:two-party`
 
 ## Layout
 
@@ -32,3 +33,15 @@ scripts/sp-baseline.ts  Phase 0 gate: SP send → chain scan → spend on regtes
 npm test            # BIP352 vectors (no node needed)
 npm run demo:sp     # live regtest round trip
 ```
+
+## Use it
+
+```bash
+./infra/regtest.sh start
+npm run spay -- fund 0.5                 # payer gets regtest coins
+npm run spay -- receive                  # terminal 1: prints an address + payjoin URI
+npm run spay -- pay '<uri>' 400000       # terminal 2: no protocol flag, ever
+```
+
+`spay pay` attempts PayJoin whenever the receiver advertises an endpoint and sends a plain silent
+payment when it does not. Both paths are private; only the join differs.

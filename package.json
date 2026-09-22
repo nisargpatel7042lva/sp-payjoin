@@ -13,7 +13,9 @@
     "regtest": "./infra/regtest.sh",
     "demo:sp": "tsx scripts/sp-baseline.ts",
     "demo:payjoin": "tsx scripts/payjoin-demo.ts",
-    "demo:sp-payjoin": "tsx scripts/sp-payjoin-demo.ts"
+    "demo:sp-payjoin": "tsx scripts/sp-payjoin-demo.ts",
+    "spay": "tsx src/cli/spay.ts",
+    "demo:two-party": "scripts/two-party-demo.sh"
   },
   "license": "MIT",
   "dependencies": {

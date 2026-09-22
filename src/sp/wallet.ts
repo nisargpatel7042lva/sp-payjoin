@@ -13,6 +13,7 @@ import type { KeyedUtxo } from '../wallet/simple.js';
 import type { DecodedTx } from '../chain/rpc.js';
 import type { ProposalInput, ReceiverHooks } from '../payjoin/receiver.js';
 import { signPsbtInput } from '../wallet/psbt-wallet.js';
+import { loadJson, saveJson, walletPath } from '../wallet/store.js';
 import { toView } from '../wallet/simple.js';
 
 export interface SpUtxo extends KeyedUtxo { tweak: Uint8Array; foundIn: string }
@@ -23,8 +24,49 @@ export class SpWallet {
   readonly utxos = new Map<string, SpUtxo>();
   readonly spent = new Map<string, SpUtxo>();
   readonly log: string[] = [];
+  /** Height of the last block scanned (exclusive lower bound for the next scan). */
+  scannedHeight = 0;
+  private path?: string;
 
   constructor(keys: SpReceiverKeys = newReceiverKeys()) { this.keys = keys; this.address = spAddress(keys); }
+
+  /** Opens (or creates) a persistent wallet file: keys + scan height. UTXOs are re-derived by scanning. */
+  static open(name = 'receiver', startHeight = 0): SpWallet {
+    const path = walletPath(name);
+    const file = loadJson<{ version: 1; scanPriv: string; spendPriv: string; scannedHeight: number }>(path);
+    const w = file
+      ? new SpWallet(newReceiverKeys(Buffer.from(file.scanPriv, 'hex'), Buffer.from(file.spendPriv, 'hex')))
+      : new SpWallet();
+    w.path = path;
+    w.scannedHeight = file?.scannedHeight ?? startHeight;
+    if (!file) w.save();
+    return w;
+  }
+
+  save(): void {
+    if (!this.path) return;
+    saveJson(this.path, { version: 1, scanPriv: Buffer.from(this.keys.scanPriv).toString('hex'), spendPriv: Buffer.from(this.keys.spendPriv).toString('hex'), scannedHeight: this.scannedHeight });
+  }
+
+  /**
+   * Scans new blocks for payments to this address and for spends of our UTXOs.
+   * This is the trustless-but-naive path (every transaction in every block); a
+   * real deployment would use a BIP352 index / block filters.
+   */
+  async scanChain(rpc: { getBlockCount(): Promise<number>; getBlockHash(h: number): Promise<string>; getBlock(hash: string): Promise<{ height: number; tx: DecodedTx[] }> }): Promise<SpUtxo[]> {
+    const tip = await rpc.getBlockCount();
+    const found: SpUtxo[] = [];
+    for (let h = this.scannedHeight + 1; h <= tip; h++) {
+      const block = await rpc.getBlock(await rpc.getBlockHash(h));
+      for (const tx of block.tx) {
+        if (tx.vin.every((v) => !v.prevout)) continue; // coinbase
+        found.push(...this.scanDecodedTx(tx));
+      }
+      this.scannedHeight = h;
+    }
+    this.save();
+    return found;
+  }
 
   balanceSat(): number { return [...this.utxos.values()].reduce((a, u) => a + u.valueSat, 0); }
   isOwnedScript(spk: Uint8Array): boolean { const h = Buffer.from(spk).toString('hex'); return [...this.utxos.values()].some((u) => Buffer.from(u.scriptPubKey).toString('hex') === h); }
