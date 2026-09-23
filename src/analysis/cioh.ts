@@ -54,3 +54,35 @@ export function score(v: Verdict, truth: GroundTruth): Scorecard {
   };
   return { h1, h2 };
 }
+
+/**
+ * H3, address reuse: how many times an output script has appeared on chain
+ * before this transaction. A reused address is what lets a surveillance tool
+ * search for a merchant and pull up every payment they ever received.
+ * Silent payments make every output a fresh key, so this always answers 0.
+ */
+export interface ChainIndex { occurrencesBefore(scriptPubKeyHex: string, txid: string): number }
+
+export async function buildChainIndex(rpc: {
+  getBlockCount(): Promise<number>;
+  getBlockHash(h: number): Promise<string>;
+  getBlock(hash: string): Promise<{ height: number; tx: Array<{ txid: string; vout: Array<{ scriptPubKey: { hex: string } }> }> }>;
+}, fromHeight = 0): Promise<ChainIndex> {
+  const seen = new Map<string, string[]>(); // script → txids, in block order
+  const tip = await rpc.getBlockCount();
+  for (let h = fromHeight; h <= tip; h++) {
+    const block = await rpc.getBlock(await rpc.getBlockHash(h));
+    for (const tx of block.tx) for (const o of tx.vout) {
+      const list = seen.get(o.scriptPubKey.hex) ?? [];
+      if (!list.includes(tx.txid)) list.push(tx.txid);
+      seen.set(o.scriptPubKey.hex, list);
+    }
+  }
+  return {
+    occurrencesBefore(script, txid) {
+      const list = seen.get(script) ?? [];
+      const i = list.indexOf(txid);
+      return i < 0 ? list.length : i;
+    },
+  };
+}

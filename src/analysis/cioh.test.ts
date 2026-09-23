@@ -16,3 +16,21 @@ test('payjoin: H1 clusters two owners together, H2 overstates the payment', () =
   assert.match(s.h1.detail, /alice and bob/);
   assert.equal(s.h2?.correct, false);
 });
+
+import { buildChainIndex } from './cioh.js';
+
+test('chain index counts only prior appearances of an output script', async () => {
+  const blocks: Record<number, { height: number; tx: Array<{ txid: string; vout: Array<{ scriptPubKey: { hex: string } }> }> }> = {
+    0: { height: 0, tx: [{ txid: 'a', vout: [{ scriptPubKey: { hex: 'REUSED' } }] }] },
+    1: { height: 1, tx: [{ txid: 'b', vout: [{ scriptPubKey: { hex: 'REUSED' } }, { scriptPubKey: { hex: 'FRESH1' } }] }] },
+    2: { height: 2, tx: [{ txid: 'c', vout: [{ scriptPubKey: { hex: 'REUSED' } }, { scriptPubKey: { hex: 'FRESH2' } }] }] },
+  };
+  const rpc = { getBlockCount: async () => 2, getBlockHash: async (h: number) => String(h), getBlock: async (hash: string) => blocks[Number(hash)]! };
+  const index = await buildChainIndex(rpc, 0);
+  assert.equal(index.occurrencesBefore('REUSED', 'a'), 0, 'first use is not reuse');
+  assert.equal(index.occurrencesBefore('REUSED', 'b'), 1);
+  assert.equal(index.occurrencesBefore('REUSED', 'c'), 2);
+  assert.equal(index.occurrencesBefore('FRESH1', 'b'), 0);
+  assert.equal(index.occurrencesBefore('FRESH2', 'c'), 0);
+  assert.equal(index.occurrencesBefore('NEVER-SEEN', 'c'), 0);
+});

@@ -12,6 +12,7 @@ Built for the Bitshala BOSS Battle hackathon, Cypherpunk track.
 - **Phase 1 — BIP78 PayJoin core (plain addresses): done.** See `docs/phase-1.md`. `npm run demo:payjoin`
 - **Phase 2 — silent payment addressing: done.** See `docs/phase-2.md`. `npm run demo:sp-payjoin`
 - **Phase 3 — private by default (CLI, two parties): done.** See `docs/phase-3.md`. `npm run demo:two-party`
+- **Phase 4 — the before/after demo: done.** See `docs/phase-4.md`. `npm run demo:surveillance`
 
 ## Layout
 
@@ -33,6 +34,16 @@ scripts/sp-baseline.ts  Phase 0 gate: SP send → chain scan → spend on regtes
 npm test            # BIP352 vectors (no node needed)
 npm run demo:sp     # live regtest round trip
 ```
+
+## See the point in 30 seconds
+
+```bash
+npm run demo:surveillance
+```
+
+Alice pays Bob 600,000 sat three ways on a real regtest chain — today's reused address, silent
+payments, then silent payments + payjoin — and a surveillance tool answers three questions about
+each. It scores **3/3 → 2/3 → 0/3**. Also writes `out/report.html`.
 
 ## Use it
 
