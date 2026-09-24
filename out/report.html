@@ -1,114 +1,184 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Payment Privacy</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Surveillance Scorecard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-  :root{--bg:#fbfaf7;--fg:#1a1a18;--muted:#6b6862;--line:#e2ded4;--card:#fff;--bad:#b3261e;--good:#146c43;--ours:#1d4ed8}
-  @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#15161a;--fg:#ececee;--muted:#9b9aa3;--line:#2c2e35;--card:#1c1e24;--bad:#ff6b5e;--good:#5ed39a;--ours:#7aa2ff}}
-  :root[data-theme=dark]{--bg:#15161a;--fg:#ececee;--muted:#9b9aa3;--line:#2c2e35;--card:#1c1e24;--bad:#ff6b5e;--good:#5ed39a;--ours:#7aa2ff}
+  :root{
+    color-scheme: light;
+    --ground:#f6f7f9; --card:#ffffff; --ink:#15181e; --muted:#5d646f; --line:#dde1e8;
+    --exposed:#b33128; --protected:#0e7350; --ours:#2b5bd7; --shadow:0 1px 2px rgba(20,24,33,.06);
+  }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --ground:#0f1216; --card:#171b21; --ink:#e7eaef; --muted:#98a0ad; --line:#252b34;
+    --exposed:#ff7063; --protected:#4ec293; --ours:#84a8ff; --shadow:none;
+  }}
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --ground:#0f1216; --card:#171b21; --ink:#e7eaef; --muted:#98a0ad; --line:#252b34;
+    --exposed:#ff7063; --protected:#4ec293; --ours:#84a8ff; --shadow:none;
+  }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;padding:32px 16px 64px}
-  main{max-width:1060px;margin:0 auto}
-  h1{font-size:clamp(22px,3.4vw,30px);line-height:1.2;margin:0 0 6px;letter-spacing:-.02em}
-  .sub{color:var(--muted);margin:0 0 28px;font-size:15px}
-  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-  @media(max-width:760px){.grid{grid-template-columns:1fr}}
-  .col{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
-  .col.ours{border-color:var(--ours);border-width:2px}
-  .head h2{font-size:14px;letter-spacing:.08em;text-transform:uppercase;margin:0}
-  .head p{margin:2px 0 12px;color:var(--muted);font-size:13px}
-  .tx{display:flex;align-items:center;gap:10px}
-  .side{flex:1;min-width:0}
-  .cap{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}
-  .io{display:flex;justify-content:space-between;gap:8px;font-variant-numeric:tabular-nums;font-size:13px;padding:2px 0;border-bottom:1px dashed var(--line)}
-  .io span{color:var(--muted)}
-  .arrow{color:var(--muted)}
-  h3{font-size:15px;margin:30px 0 10px;padding-top:18px;border-top:1px solid var(--line)}
-  .says{margin:0 0 8px;font-size:14px}
-  .mark{margin:0 0 6px;font-weight:650;font-size:14px}
-  .fooled .mark{color:var(--bad)} .leaked .mark{color:var(--good)}
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font:16px/1.55 "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding-inline:16px; padding-block:40px 64px;
+  }
+  .wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:34px}
+  .mono{font-family:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace}
+  h1{font-size:clamp(24px,3.6vw,34px);line-height:1.15;letter-spacing:-.02em;margin:0;text-wrap:balance}
+  .lede{margin:10px 0 0;color:var(--muted);max-width:62ch}
+  .eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start}
+  @media (max-width:820px){ .grid{grid-template-columns:1fr} }
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;box-shadow:var(--shadow)}
+  .card.ours{border-color:var(--ours)}
+  .name{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin:0}
+  .name.ours{color:var(--ours)}
+  .sub{margin:3px 0 14px;color:var(--muted);font-size:13px}
+  .flow{display:flex;gap:12px;align-items:stretch}
+  .leg{flex:1;min-width:0}
+  .leg h4{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:500}
+  .io{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px dotted var(--line);font-size:13px}
+  .io b{font-family:"IBM Plex Mono",ui-monospace,monospace;font-weight:600;font-variant-numeric:tabular-nums}
+  .io span{color:var(--muted);white-space:nowrap}
+  .join{color:var(--ours);font-weight:600}
+  .to{align-self:center;color:var(--muted);font-size:18px}
+  .pips{display:flex;gap:5px;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+  .pip{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--protected)}
+  .pip.hit{background:var(--exposed);border-color:var(--exposed)}
+  .pips span{font-size:12px;color:var(--muted);margin-left:5px}
+  .q{display:flex;flex-direction:column;gap:12px}
+  .q > h3{margin:0;font-size:17px;letter-spacing:-.01em}
+  .ans{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:9px;box-shadow:var(--shadow)}
+  .ans.ours{border-color:var(--ours)}
+  .says{margin:0;font-size:14px}
+  .says::before{content:"“"} .says::after{content:"”"}
+  .tag{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid currentColor}
+  .tag.right{color:var(--exposed)} .tag.wrong{color:var(--protected)}
   .truth{margin:0;color:var(--muted);font-size:13px}
-  .verdict{margin-top:30px;padding-top:18px;border-top:1px solid var(--line)}
-  .score{font-size:13px;color:var(--muted);margin-top:8px;font-variant-numeric:tabular-nums}
-  footer{margin-top:34px;color:var(--muted);font-size:12px}
-  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;word-break:break-all}
-</style></head><body><main>
-  <h1>Alice pays Bob 600,000 sat — three ways</h1>
-  <p class="sub">Three real transactions on a regtest chain. A chain-surveillance tool examines each one; its answers are checked against what actually happened.</p>
-  <div class="grid">
-      <div class="col">
-        <div class="head"><h2>TODAY</h2><p>reused address</p></div>
-        <div class="tx">
-          <div class="side"><span class="cap">inputs</span>
-            <div class="io"><b>1,000,000</b><span>Alice</span></div>
+  .final{border-top:1px solid var(--line);padding-top:22px}
+  .score{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:26px;font-variant-numeric:tabular-nums;margin:0 0 4px}
+  .foot{color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:18px;display:flex;flex-direction:column;gap:12px}
+  .foot p{margin:0;max-width:74ch}
+  .txids{display:flex;flex-direction:column;gap:3px;font-size:11px;overflow-x:auto}
+</style>
+</head><body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">bip352 silent payments · bip78 payjoin · regtest</p>
+    <h1>Alice pays Bob 600,000 sat — three ways</h1>
+    <p class="lede">Three real transactions, mined on a regtest chain. A chain-surveillance tool examines each one and answers the same three questions. Because we hold the keys, every answer can be marked against what actually happened.</p>
+  </header>
+
+  <section class="grid">
+        <div class="card">
+          <p class="name">TODAY</p>
+          <p class="sub">reused address</p>
+          <div class="flow">
+            <div class="leg"><h4>inputs</h4><div class="io"><b>1,000,000</b><span>Alice</span></div></div>
+            <div class="to">→</div>
+            <div class="leg"><h4>outputs</h4><div class="io"><b>600,000</b><span>to Bob</span></div><div class="io"><b>399,400</b><span>Alice's change</span></div></div>
           </div>
-          <div class="arrow">→</div>
-          <div class="side"><span class="cap">outputs</span>
-            <div class="io"><b>600,000</b><span>to Bob</span></div><div class="io"><b>399,400</b><span>Alice's change</span></div>
-          </div>
+          <div class="pips"><i class="pip hit" aria-hidden="true"></i><i class="pip hit" aria-hidden="true"></i><i class="pip hit" aria-hidden="true"></i><span>3 of 3 answers correct</span></div>
         </div>
-      </div>
-      <div class="col">
-        <div class="head"><h2>+ SILENT PAYMENTS</h2><p>fresh key, no address</p></div>
-        <div class="tx">
-          <div class="side"><span class="cap">inputs</span>
-            <div class="io"><b>1,000,000</b><span>Alice</span></div>
+        <div class="card">
+          <p class="name">+ SILENT PAYMENTS</p>
+          <p class="sub">fresh key, no address</p>
+          <div class="flow">
+            <div class="leg"><h4>inputs</h4><div class="io"><b>1,000,000</b><span>Alice</span></div></div>
+            <div class="to">→</div>
+            <div class="leg"><h4>outputs</h4><div class="io"><b>600,000</b><span>to Bob</span></div><div class="io"><b>399,400</b><span>Alice's change</span></div></div>
           </div>
-          <div class="arrow">→</div>
-          <div class="side"><span class="cap">outputs</span>
-            <div class="io"><b>600,000</b><span>to Bob</span></div><div class="io"><b>399,400</b><span>Alice's change</span></div>
-          </div>
+          <div class="pips"><i class="pip" aria-hidden="true"></i><i class="pip hit" aria-hidden="true"></i><i class="pip hit" aria-hidden="true"></i><span>2 of 3 answers correct</span></div>
         </div>
-      </div>
-      <div class="col ours">
-        <div class="head"><h2>+ PAYJOIN</h2><p>fresh key + joined inputs</p></div>
-        <div class="tx">
-          <div class="side"><span class="cap">inputs</span>
-            <div class="io"><b>1,000,000</b><span>Alice</span></div><div class="io"><b>700,000</b><span>Bob</span></div>
+        <div class="card ours">
+          <p class="name ours">+ PAYJOIN</p>
+          <p class="sub">fresh key + joined inputs</p>
+          <div class="flow">
+            <div class="leg"><h4>inputs</h4><div class="io"><b>700,000</b><span class="join">Bob</span></div><div class="io"><b>1,000,000</b><span>Alice</span></div></div>
+            <div class="to">→</div>
+            <div class="leg"><h4>outputs</h4><div class="io"><b>1,300,000</b><span>to Bob</span></div><div class="io"><b>399,174</b><span>Alice's change</span></div></div>
           </div>
-          <div class="arrow">→</div>
-          <div class="side"><span class="cap">outputs</span>
-            <div class="io"><b>1,300,000</b><span>to Bob</span></div><div class="io"><b>399,174</b><span>Alice's change</span></div>
-          </div>
+          <div class="pips"><i class="pip" aria-hidden="true"></i><i class="pip" aria-hidden="true"></i><i class="pip" aria-hidden="true"></i><span>0 of 3 answers correct</span></div>
+        </div></section>
+
+  <section class="q">
+    <h3>Who received this money?</h3>
+    <div class="grid">
+        <div class="ans">
+          <p class="says">bcrt1qmjn2c376… — an address already seen in 1 earlier tx, so every payment to it links up</p>
+          <span class="tag right">correct</span>
+          <p class="truth">→ Bob is exposed, along with his payment history</p>
         </div>
+        <div class="ans">
+          <p class="says">nothing to go on — every output is a one-time key, never seen before or since</p>
+          <span class="tag wrong">wrong</span>
+          <p class="truth">→ Bob stays private; there is no address to search for</p>
+        </div>
+        <div class="ans ours">
+          <p class="says">nothing to go on — every output is a one-time key, never seen before or since</p>
+          <span class="tag wrong">wrong</span>
+          <p class="truth">→ Bob stays private; there is no address to search for</p>
+        </div></div>
+  </section><section class="q">
+    <h3>Who owns the inputs?</h3>
+    <div class="grid">
+        <div class="ans">
+          <p class="says">one wallet — a single input, so one owner</p>
+          <span class="tag right">correct</span>
+          <p class="truth">→ Alice’s coins get clustered together</p>
+        </div>
+        <div class="ans">
+          <p class="says">one wallet — a single input, so one owner</p>
+          <span class="tag right">correct</span>
+          <p class="truth">→ Alice’s coins get clustered together</p>
+        </div>
+        <div class="ans ours">
+          <p class="says">one wallet — all 2 inputs are spent together, so one owner</p>
+          <span class="tag wrong">wrong</span>
+          <p class="truth">→ they are Bob and Alice: a stranger’s coin is now filed under the payer’s wallet</p>
+        </div></div>
+  </section><section class="q">
+    <h3>How much was paid?</h3>
+    <div class="grid">
+        <div class="ans">
+          <p class="says">600,000 sat</p>
+          <span class="tag right">correct</span>
+          <p class="truth">→ the real amount, 600,000 sat, is public</p>
+        </div>
+        <div class="ans">
+          <p class="says">600,000 sat</p>
+          <span class="tag right">correct</span>
+          <p class="truth">→ the real amount, 600,000 sat, is public</p>
+        </div>
+        <div class="ans ours">
+          <p class="says">1,300,000 sat</p>
+          <span class="tag wrong">wrong</span>
+          <p class="truth">→ the real payment was 600,000 sat; the figure is inflated by the receiver’s own coin</p>
+        </div></div>
+  </section>
+
+  <section class="final">
+    <p class="eyebrow">verdict</p>
+    <div class="grid"><div class="card">
+        <p class="score mono" style="color:var(--exposed)">3/3</p>
+        <p class="truth">Everything leaks: who was paid, how much, and which coins belong to the payer.</p>
+      </div><div class="card">
+        <p class="score mono" style="color:var(--ink)">2/3</p>
+        <p class="truth">The receiver is hidden, but the payer’s coins are still clustered and the amount is public.</p>
+      </div><div class="card ours">
+        <p class="score mono" style="color:var(--protected)">0/3</p>
+        <p class="truth">Who was paid, how much, and whose coins — all three answers are wrong.</p>
       </div></div>
-  <h3>Who received this money?</h3><div class="grid"><div class="col leaked">
-        <p class="says">“bcrt1qgdmzl5z7… — an address already seen in 1 earlier tx, so every payment to it links up”</p>
-        <p class="mark">✓ right</p>
-        <p class="truth">→ Bob is exposed, along with his payment history</p>
-      </div><div class="col fooled">
-        <p class="says">“nothing to go on — every output is a one-time key, never seen before or since”</p>
-        <p class="mark">✗ wrong</p>
-        <p class="truth">→ Bob stays private; there is no address to search for</p>
-      </div><div class="col fooled">
-        <p class="says">“nothing to go on — every output is a one-time key, never seen before or since”</p>
-        <p class="mark">✗ wrong</p>
-        <p class="truth">→ Bob stays private; there is no address to search for</p>
-      </div></div><h3>Who owns the inputs?</h3><div class="grid"><div class="col leaked">
-        <p class="says">“one wallet — a single input, so one owner”</p>
-        <p class="mark">✓ right</p>
-        <p class="truth">→ Alice’s coins get clustered together</p>
-      </div><div class="col leaked">
-        <p class="says">“one wallet — a single input, so one owner”</p>
-        <p class="mark">✓ right</p>
-        <p class="truth">→ Alice’s coins get clustered together</p>
-      </div><div class="col fooled">
-        <p class="says">“one wallet — all 2 inputs are spent together, so one owner”</p>
-        <p class="mark">✗ wrong</p>
-        <p class="truth">→ they are Alice and Bob: a stranger’s coin is now filed under the payer’s wallet</p>
-      </div></div><h3>How much was paid?</h3><div class="grid"><div class="col leaked">
-        <p class="says">“600,000 sat”</p>
-        <p class="mark">✓ right</p>
-        <p class="truth">→ the real amount, 600,000 sat, is public</p>
-      </div><div class="col leaked">
-        <p class="says">“600,000 sat”</p>
-        <p class="mark">✓ right</p>
-        <p class="truth">→ the real amount, 600,000 sat, is public</p>
-      </div><div class="col fooled">
-        <p class="says">“1,300,000 sat”</p>
-        <p class="mark">✗ wrong</p>
-        <p class="truth">→ the real payment was 600,000 sat; the figure is inflated by the receiver’s own coin</p>
-      </div></div>
-  <div class="verdict"><div class="grid"><div class="col"><p class="mark" style="color:var(--bad)">fully exposed</p><p class="truth">Bob is identified, the amount is known, and Alice’s coins are clustered.</p><p class="score">0/3 answers wrong</p></div><div class="col"><p class="mark" style="color:inherit">partly private</p><p class="truth">Bob is hidden, but Alice’s coins are still clustered and the amount is right.</p><p class="score">1/3 answers wrong</p></div><div class="col ours"><p class="mark" style="color:var(--good)">surveillance fails</p><p class="truth">Bob is hidden, the amount is wrong, and Alice’s coins are clustered with a stranger’s.</p><p class="score">3/3 answers wrong</p></div></div></div>
-  <footer><div><code>TODAY: f3f293b9bb357c812483744c14f3f8996a13d86d362727d1d242ff8ba437d748</code></div><div><code>+ SILENT PAYMENTS: 437487ac69427d1c6869beebb305af780e5ca235b964f9333729582adac90b74</code></div><div><code>+ PAYJOIN: 3bf2b73ea10e550550d1d89d9693d75d819bfde4195d8cff5d1d0989dc33a454</code></div>
-  <p>BIP352 silent payments give the receiver a fresh key per payment, so there is no address to search for. BIP78 payjoin puts an input from the receiver into the same transaction, so “all inputs share one owner” — the assumption most chain analysis rests on — becomes false.</p></footer>
-</main></body></html>
+  </section>
+
+  <footer class="foot">
+    <p>Silent payments give the receiver a fresh key for every payment, so there is no address on the chain to search for. Payjoin puts an input from the receiver into the same transaction, so “every input belongs to one owner” — the assumption most chain analysis rests on — stops being true.</p>
+    <p>The analyst here applies three textbook heuristics, not a commercial product with clustering history or exchange records. An analyst who suspects payjoin can subtract the receiver’s contribution; the point is that the shared-ownership assumption becomes unreliable for every transaction, not that any single one is undetectable.</p>
+    <div class="txids mono"><div>TODAY — 927f5973efe734f730ff2b7c89e601f56f028855e44b0a62297e07be790d0961</div><div>+ SILENT PAYMENTS — 97af8e564265fc78bc4e6b15c55e334b92e605a6967196ddd10348f6a25e718e</div><div>+ PAYJOIN — 5e1fe857afa3fc8407e9f7612549e0a6e80f4526fd225d3d29784345c79aa7c1</div></div>
+  </footer>
+</div>
+</body></html>

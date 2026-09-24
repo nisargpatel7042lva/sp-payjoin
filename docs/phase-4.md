@@ -31,8 +31,9 @@ walks every block and counts prior appearances of each output script), not an as
 
 - Terminal: three aligned columns, each question showing what the analyst concluded, whether it was
   right, and the privacy consequence in plain words.
-- `out/report.html`: the same comparison as a single self-contained page (no network, no build,
-  light/dark) for slides, screenshots, or the submission write-up.
+- `out/report.html`: the same comparison as a single standalone page (light/dark) for slides,
+  screenshots, or the submission write-up. `out/report.fragment.html` is the body-only variant
+  for hosting; both come from one renderer in `src/analysis/report.ts` so they cannot drift.
 
 ## Honesty notes
 

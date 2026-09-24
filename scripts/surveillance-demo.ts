@@ -19,7 +19,7 @@ import { startReceiverServer } from '../src/payjoin/http.js';
 import { payWithPayjoin } from '../src/payjoin/client.js';
 import { buildPjUri } from '../src/payjoin/uri.js';
 import { analyze, buildChainIndex } from '../src/analysis/cioh.js';
-import { renderReport } from '../src/analysis/report.js';
+import { renderReport, renderReportFragment } from '../src/analysis/report.js';
 
 const rpc = new BitcoinRpc();
 const PAY = 600_000, FEE = 600;
@@ -194,11 +194,12 @@ row('VERDICT', results.map((r) => {
 rule('═');
 console.log(`\nsurveillance scored: ${results.map((r) => `${r.scenario.title.replace('+ ', '')} ${r.findings.filter((f) => !f.fooled).length}/3 correct`).join('   ·   ')}\n`);
 
-const html = renderReport(results.map((r) => ({
+const columns = results.map((r) => ({
   title: r.scenario.title, subtitle: r.scenario.subtitle, txid: r.scenario.txid,
   inputs: r.scenario.tx.vin.map((v) => ({ label: r.scenario.owners[`${v.txid}:${v.vout}`] ?? '?', valueSat: btc(v.prevout!.value) })),
   outputs: r.scenario.tx.vout.map((o) => ({ label: o.n === r.scenario.paymentOutputIndex ? 'to Bob' : "Alice's change", valueSat: btc(o.value) })),
   findings: r.findings,
-})));
-writeFileSync(new URL('../out/report.html', import.meta.url), html);
-console.log('  wrote out/report.html (open it for the same thing as a page)\n');
+}));
+writeFileSync(new URL('../out/report.html', import.meta.url), renderReport(columns));
+writeFileSync(new URL('../out/report.fragment.html', import.meta.url), renderReportFragment(columns));
+console.log('wrote out/report.html — the same comparison as a page\n');

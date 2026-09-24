@@ -1,3 +1,4 @@
 node_modules/
 infra/bitcoin/regtest/
 *.log
+out/report.fragment.html
