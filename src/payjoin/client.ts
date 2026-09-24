@@ -25,6 +25,8 @@ export interface PayjoinSendParams {
   paymentOutputIndex: number;
   params?: SenderOptionalParams;
   network?: Network;
+  /** Give up on the endpoint after this long and send directly. @default 30000 */
+  requestTimeoutMs?: number;
   broadcast(txHex: string): Promise<string>;
   log?: (s: string) => void;
 }
@@ -81,7 +83,7 @@ export async function payWithPayjoin(p: PayjoinSendParams): Promise<PayjoinSendR
   }
   let proposalBase64: string;
   try {
-    proposalBase64 = await postOriginalPsbt(buildRequestUrl(uri.pj, params), originalBase64);
+    proposalBase64 = await postOriginalPsbt(buildRequestUrl(uri.pj, params), originalBase64, { timeoutMs: p.requestTimeoutMs });
   } catch (e) {
     log(`payjoin request failed (${(e as Error).message}); broadcasting original`);
     const txid = await p.broadcast(originalTx.toHex());
@@ -97,15 +99,25 @@ export async function payWithPayjoin(p: PayjoinSendParams): Promise<PayjoinSendR
     const txid = await p.broadcast(originalTx.toHex());
     return { txid, payjoin: false, tx: originalTx, originalTxid: originalTx.getId(), originalBase64, proposalBase64, reason: (e as Error).message };
   }
-  const ours = new Map(p.inputs.map((u) => [`${u.txid}:${u.vout}`, u]));
-  proposal.txInputs.forEach((i, k) => {
-    const key = `${Buffer.from(i.hash).reverse().toString('hex')}:${i.index}`;
-    const u = ours.get(key);
-    if (u) signPsbtInput(proposal, k, u); // never sign anything that was not in the original
-  });
-  finalizePsbt(proposal);
-  const tx = extractTx(proposal);
-  checkMinFeeRate(ctx, tx, psbtFee(proposal));
+  // Sign, finalise and run the last checks. Anything wrong here — a fee rate below
+  // `minfeerate`, a proposal that will not finalise — means the payjoin is abandoned
+  // and the original goes out instead; the payment still happens either way.
+  let tx;
+  try {
+    const ours = new Map(p.inputs.map((u) => [`${u.txid}:${u.vout}`, u]));
+    proposal.txInputs.forEach((i, k) => {
+      const key = `${Buffer.from(i.hash).reverse().toString('hex')}:${i.index}`;
+      const u = ours.get(key);
+      if (u) signPsbtInput(proposal, k, u); // never sign anything that was not in the original
+    });
+    finalizePsbt(proposal);
+    tx = extractTx(proposal);
+    checkMinFeeRate(ctx, tx, psbtFee(proposal));
+  } catch (e) {
+    log(`payjoin proposal unusable (${(e as Error).message}); broadcasting original`);
+    const txid = await p.broadcast(originalTx.toHex());
+    return { txid, payjoin: false, tx: originalTx, originalTxid: originalTx.getId(), originalBase64, proposalBase64, reason: (e as Error).message };
+  }
   const txid = await p.broadcast(tx.toHex());
   log(`payjoin tx ${txid} fee ${psbtFee(proposal)} sat, ${tx.ins.length} in / ${tx.outs.length} out`);
   return { txid, payjoin: tx.ins.length > originalTx.ins.length, tx, originalTxid: originalTx.getId(), originalBase64, proposalBase64 };

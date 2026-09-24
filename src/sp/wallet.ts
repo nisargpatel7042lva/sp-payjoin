@@ -111,8 +111,12 @@ export class SpWallet {
       markInputSeen: (op) => { seen.add(op); },
       // Identify our outputs by scanning the original transaction with the scan key.
       identifyOutputs: ({ inputs, outputs }) => this.findOutputs(inputs.map(asView), outputs.map((o) => ({ index: o.index, scriptPubKeyHex: Buffer.from(o.scriptPubKey).toString('hex'), valueSat: o.valueSat }))).map((f) => f.index),
-      // Contribute one of our silent-payment UTXOs (largest first).
-      selectInput: () => [...this.utxos.values()].sort((a, b) => b.valueSat - a.valueSat)[0],
+      // Contribute one of our silent-payment UTXOs: an already-exposed one first
+      // (BIP78 probing mitigation), otherwise the largest.
+      selectInput: (_original, exposed) => {
+        const all = [...this.utxos.values()];
+        return all.find((u) => exposed.includes(`${u.txid}:${u.vout}`)) ?? all.sort((a, b) => b.valueSat - a.valueSat)[0];
+      },
       signInput: (psbt: Psbt, idx, u) => { signPsbtInput(psbt, idx, u); psbt.finalizeInput(idx); },
       // Our input changed the input set → recompute output k for the joined transaction.
       substituteOutput: ({ index, ourOutputs, inputs }) => this.deriveForInputs(inputs.map(asView), ourOutputs.indexOf(index)),

@@ -13,6 +13,7 @@ Built for the Bitshala BOSS Battle hackathon, Cypherpunk track.
 - **Phase 2 — silent payment addressing: done.** See `docs/phase-2.md`. `npm run demo:sp-payjoin`
 - **Phase 3 — private by default (CLI, two parties): done.** See `docs/phase-3.md`. `npm run demo:two-party`
 - **Phase 4 — the before/after demo: done.** See `docs/phase-4.md`. `npm run demo:surveillance`
+- **Phase 5 — edge cases hardened: done.** See `docs/phase-5.md`. Every failure mode falls back to a plain silent payment.
 
 ## Layout
 

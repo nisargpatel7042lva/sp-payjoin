@@ -30,8 +30,13 @@ export async function startReceiverServer(receiver: PayjoinReceiver, opts: { por
 
 export class PayjoinHttpError extends Error { constructor(public readonly status: number, public readonly body: string) { super(`payjoin endpoint returned ${status}: ${body}`); } }
 
-export async function postOriginalPsbt(url: string, originalBase64: string): Promise<string> {
-  const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: originalBase64 });
+/**
+ * POSTs the original PSBT. Bounded by `timeoutMs`: a receiver that accepts the
+ * connection and then never answers must not hold the payment open forever —
+ * the sender falls back to broadcasting the original instead.
+ */
+export async function postOriginalPsbt(url: string, originalBase64: string, opts: { timeoutMs?: number } = {}): Promise<string> {
+  const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: originalBase64, signal: AbortSignal.timeout(opts.timeoutMs ?? 30_000) });
   const text = await res.text();
   if (res.status !== 200) throw new PayjoinHttpError(res.status, text);
   return text.trim();

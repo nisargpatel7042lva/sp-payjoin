@@ -21,8 +21,12 @@ export interface ReceiverHooks {
   /** Probing / reentrancy defence: has this outpoint been seen in a previous original PSBT? */
   inputSeenBefore(outpoint: string): Promise<boolean> | boolean;
   markInputSeen(outpoint: string): Promise<void> | void;
-  /** The input to contribute. May consult the original tx (e.g. to match input type). */
-  selectInput(original: Transaction): Promise<KeyedUtxo | undefined> | KeyedUtxo | undefined;
+  /**
+   * The input to contribute. `exposed` lists outpoints already revealed to some
+   * sender; BIP78 asks receivers to re-offer those in priority so that a prober
+   * who never broadcasts cannot walk the wallet one UTXO at a time.
+   */
+  selectInput(original: Transaction, exposed: readonly string[]): Promise<KeyedUtxo | undefined> | KeyedUtxo | undefined;
   /** Sign + finalize our input at `idx` in the proposal PSBT. */
   signInput(psbt: Psbt, idx: number, utxo: KeyedUtxo): Promise<void> | void;
   /**
@@ -41,6 +45,8 @@ export interface ReceiverOptions {
   dustSat?: number;
   /** Deterministic insertion index (tests). */
   randomIndex?: (n: number) => number;
+  /** Outpoints already revealed to senders; shared across requests (and persistable). */
+  exposedInputs?: Set<string>;
 }
 
 export interface OriginalRequest { psbtBase64: string; query: URLSearchParams }
@@ -60,10 +66,13 @@ export class PayjoinReceiver {
   private readonly versions: number[];
   private readonly dust: number;
   private readonly randomIndex: (n: number) => number;
+  /** Outpoints this receiver has already shown to a sender (BIP78 probing mitigation). */
+  readonly exposedInputs: Set<string>;
   constructor(private readonly hooks: ReceiverHooks, opts: ReceiverOptions = {}) {
     this.versions = opts.supportedVersions ?? [1];
     this.dust = opts.dustSat ?? 546;
     this.randomIndex = opts.randomIndex ?? ((n) => randomInt(0, n + 1));
+    this.exposedInputs = opts.exposedInputs ?? new Set<string>();
   }
 
   async handle(req: OriginalRequest): Promise<ProposalResult> {
@@ -112,8 +121,10 @@ export class PayjoinReceiver {
     const disableSubstitution = q.get('disableoutputsubstitution') === 'true';
 
     // ── contribute an input ─────────────────────────────────────────────────
-    const contributed = await this.hooks.selectInput(originalTx);
+    const contributed = await this.hooks.selectInput(originalTx, [...this.exposedInputs]);
     if (!contributed) throw new PayjoinReceiverError('unavailable', 'no input available to contribute');
+    // Revealed the moment the proposal leaves; a prober learns nothing new by asking again.
+    this.exposedInputs.add(`${contributed.txid}:${contributed.vout}`);
     const ourInputIndex = this.randomIndex(originalTx.ins.length);
     const sequence = originalTx.ins[0]!.sequence;
 
