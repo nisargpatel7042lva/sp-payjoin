@@ -13,6 +13,7 @@ import type { KeyedUtxo } from '../wallet/simple.js';
 import type { DecodedTx } from '../chain/rpc.js';
 import type { ProposalInput, ReceiverHooks } from '../payjoin/receiver.js';
 import { signPsbtInput } from '../wallet/psbt-wallet.js';
+import { chooseContribution } from '../payjoin/coin-selection.js';
 import { loadJson, saveJson, walletPath } from '../wallet/store.js';
 import { toView } from '../wallet/simple.js';
 
@@ -111,11 +112,11 @@ export class SpWallet {
       markInputSeen: (op) => { seen.add(op); },
       // Identify our outputs by scanning the original transaction with the scan key.
       identifyOutputs: ({ inputs, outputs }) => this.findOutputs(inputs.map(asView), outputs.map((o) => ({ index: o.index, scriptPubKeyHex: Buffer.from(o.scriptPubKey).toString('hex'), valueSat: o.valueSat }))).map((f) => f.index),
-      // Contribute one of our silent-payment UTXOs: an already-exposed one first
-      // (BIP78 probing mitigation), otherwise the largest.
-      selectInput: (_original, exposed) => {
-        const all = [...this.utxos.values()];
-        return all.find((u) => exposed.includes(`${u.txid}:${u.vout}`)) ?? all.sort((a, b) => b.valueSat - a.valueSat)[0];
+      // Contribute one of our silent-payment UTXOs, chosen to keep the transaction
+      // looking like an ordinary payment (see coin-selection.ts).
+      selectInput: (ctx) => {
+        const candidates = [...this.utxos.values()].map((u) => ({ ...u, outpoint: `${u.txid}:${u.vout}` }));
+        return chooseContribution(candidates, ctx, { exposed: ctx.exposed });
       },
       signInput: (psbt: Psbt, idx, u) => { signPsbtInput(psbt, idx, u); psbt.finalizeInput(idx); },
       // Our input changed the input set → recompute output k for the joined transaction.

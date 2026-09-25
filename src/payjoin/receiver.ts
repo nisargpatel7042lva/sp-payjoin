@@ -7,6 +7,7 @@ import { randomInt } from 'node:crypto';
 import { PayjoinReceiverError } from './errors.js';
 import { finalizedTx, inputValue, isFinalized, psbtFee, unsignedTx, witnessFromBytes } from './psbt-utils.js';
 import type { KeyedUtxo } from '../wallet/simple.js';
+import type { SelectionContext } from './coin-selection.js';
 
 export interface ReceiverHooks {
   /** Non-interactive receivers must check the original tx is broadcastable (probing defence). */
@@ -22,11 +23,12 @@ export interface ReceiverHooks {
   inputSeenBefore(outpoint: string): Promise<boolean> | boolean;
   markInputSeen(outpoint: string): Promise<void> | void;
   /**
-   * The input to contribute. `exposed` lists outpoints already revealed to some
-   * sender; BIP78 asks receivers to re-offer those in priority so that a prober
-   * who never broadcasts cannot walk the wallet one UTXO at a time.
+   * The input to contribute, given everything the choice depends on: the original
+   * transaction, the outpoints already revealed to senders (BIP78 asks receivers to
+   * re-offer those in priority, so a prober cannot walk the wallet), and the amounts
+   * the UIH2 heuristic is computed over. See `coin-selection.ts`.
    */
-  selectInput(original: Transaction, exposed: readonly string[]): Promise<KeyedUtxo | undefined> | KeyedUtxo | undefined;
+  selectInput(ctx: SelectionContext & { original: Transaction; exposed: readonly string[] }): Promise<KeyedUtxo | undefined> | KeyedUtxo | undefined;
   /** Sign + finalize our input at `idx` in the proposal PSBT. */
   signInput(psbt: Psbt, idx: number, utxo: KeyedUtxo): Promise<void> | void;
   /**
@@ -121,7 +123,13 @@ export class PayjoinReceiver {
     const disableSubstitution = q.get('disableoutputsubstitution') === 'true';
 
     // ── contribute an input ─────────────────────────────────────────────────
-    const contributed = await this.hooks.selectInput(originalTx, [...this.exposedInputs]);
+    const contributed = await this.hooks.selectInput({
+      original: originalTx,
+      exposed: [...this.exposedInputs],
+      outputValuesSat: originalTx.outs.map((o) => Number(o.value)),
+      ourOutputIndex,
+      inputValuesSat: original.data.inputs.map((_, k) => inputValue(original, k)!),
+    });
     if (!contributed) throw new PayjoinReceiverError('unavailable', 'no input available to contribute');
     // Revealed the moment the proposal leaves; a prober learns nothing new by asking again.
     this.exposedInputs.add(`${contributed.txid}:${contributed.vout}`);

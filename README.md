@@ -14,6 +14,7 @@ Built for the Bitshala BOSS Battle hackathon, Cypherpunk track.
 - **Phase 3 — private by default (CLI, two parties): done.** See `docs/phase-3.md`. `npm run demo:two-party`
 - **Phase 4 — the before/after demo: done.** See `docs/phase-4.md`. `npm run demo:surveillance`
 - **Phase 5 — edge cases hardened: done.** See `docs/phase-5.md`. Every failure mode falls back to a plain silent payment.
+- **Phase 6 — privacy-aware coin selection: done.** See `docs/phase-6.md`. The receiver picks a contribution that keeps the transaction in the ordinary-payment shape (avoids UIH2).
 
 **[Known limitations, assumptions and open risks](docs/limitations.md)** — read this before judging
 what the project claims. Regtest only; `@silent-pay/core` is experimental and so is this.

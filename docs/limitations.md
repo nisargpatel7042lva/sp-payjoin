@@ -61,13 +61,13 @@ that in, plus tracking block hashes so a reorg can be detected and rescanned, is
 - **Sender**: largest-first, with a **hardcoded 4 sat/vB** fee rate. There is no call to
   `estimatesmartfee`, no fee-rate argument on the CLI, and no RBF fee bumping (payjoin PSBTs *do*
   signal RBF with sequence `0xfffffffd`, but nothing ever bumps them).
-- **Receiver**: contributes its **largest** UTXO. This is the most conspicuous possible choice —
-  it inflates the apparent payment and makes the joined output stand out.
+- **Receiver**: *fixed in Phase 6* — it now contributes the smallest coin that keeps the
+  transaction in the ordinary-payment shape (avoiding UIH2), preferring an already-exposed coin.
+  See `docs/phase-6.md`. The remaining limit is real: if every coin the receiver holds is smaller
+  than the sender's change, no choice avoids UIH2 and the code falls back rather than pretending.
 
-BIP78 suggests the receiver should pick contributions that make the transaction resemble an
-ordinary payment (and mentions adding a round-amount output during "spare change" situations).
-Implementing amount-aware selection is the single highest-value remaining engineering task, because
-it improves the actual privacy property rather than the demonstration of it.
+BIP78 also mentions adding a round-amount output during "spare change" situations to poison
+amount analysis; that is not implemented.
 
 ## 6. What the privacy claim does and does not cover
 

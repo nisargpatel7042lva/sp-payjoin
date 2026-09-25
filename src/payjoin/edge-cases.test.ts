@@ -268,7 +268,7 @@ test('probing: repeated requests re-offer the same UTXO instead of walking the w
     isOwnedScript: (spk) => Buffer.compare(Buffer.from(spk), receiver.p2wpkh.output!) === 0,
     inputSeenBefore: () => false,            // a prober uses fresh inputs every time
     markInputSeen: () => {},
-    selectInput: (_o, exposed) => {
+    selectInput: ({ exposed }) => {
       const pick = wallet.find((u) => exposed.includes(`${u.txid}:${u.vout}`)) ?? wallet.sort((a, b) => b.valueSat - a.valueSat)[0]!;
       offered.push(`${pick.txid}:${pick.vout}`);
       return pick;

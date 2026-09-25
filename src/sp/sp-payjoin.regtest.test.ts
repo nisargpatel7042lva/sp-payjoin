@@ -99,3 +99,47 @@ test('receiver-side derivation equals sender-side derivation for the same input 
     assert.equal(Buffer.from(w.deriveForInputs(views, 0)).toString('hex'), Buffer.from(senderSide!.scriptPubKey).toString('hex'));
   }
 });
+
+test('receiver with several coins contributes the one that keeps the ordinary-payment shape', { skip }, async () => {
+  const receiver = new SpWallet();
+
+  // Give the receiver four silent-payment coins. Funded in this order so that the
+  // first coin that qualifies (1_500_000) is not the smallest one that qualifies.
+  for (const amount of [30_000, 1_500_000, 900_000, 5_000]) {
+    const funder = new SimpleKey();
+    const f = await p2trUtxo(funder, 0.02);
+    const [o] = silentPaymentOutputs({ keys: [{ priv: f.priv, isTaproot: true }], outpoints: [f], payments: [{ address: receiver.address, amountSat: amount }] });
+    const tx = buildSignedTx([f], [{ scriptPubKey: o!.scriptPubKey, valueSat: amount }, { scriptPubKey: new Uint8Array(new SimpleKey().p2tr.output!), valueSat: f.valueSat - amount - 400 }]);
+    const txid = await rpc.sendRawTransaction(tx.toHex()); await rpc.mine(1);
+    receiver.scanDecodedTx(await withPrevouts(rpc, await rpc.getRawTransaction(txid)));
+  }
+  assert.equal(receiver.utxos.size, 4);
+
+  // Alice pays 600_000 from an 800_000 coin, so her change is ~199_400. A contribution
+  // only preserves the shape if it exceeds that change: 900_000 and 1_500_000 both do,
+  // 30_000 and 5_000 do not. The receiver should offer the smaller of the two that work.
+  const alice = new SimpleKey(), aliceChange = new SimpleKey();
+  const a = await p2trUtxo(alice, 0.008);
+  const PAY = 600_000, FEE = 600;
+  const server = await startReceiverServer(new PayjoinReceiver(receiver.receiverHooks(chain)));
+  try {
+    const r = await payWithPayjoin({
+      uri: buildPjUri({ sp: receiver.address, amountSat: PAY, pj: server.url }),
+      inputs: [a], paymentOutputIndex: 0,
+      outputs: [{ sp: true, valueSat: PAY }, { scriptPubKey: new Uint8Array(aliceChange.p2tr.output!), valueSat: a.valueSat - PAY - FEE }],
+      params: { additionalFeeOutputIndex: 1, maxAdditionalFeeContribution: 1000 },
+      broadcast: (hex) => rpc.sendRawTransaction(hex),
+    });
+    assert.equal(r.payjoin, true);
+    await rpc.mine(1);
+    const tx = await withPrevouts(rpc, await rpc.getRawTransaction(r.txid));
+
+    const contributed = tx.vin.map((v) => Math.round(v.prevout!.value * 1e8)).find((v) => v !== a.valueSat);
+    assert.equal(contributed, 900_000, 'smallest coin that preserves the shape — not the largest, not the first that qualifies');
+
+    // The confirmed transaction now reads as an ordinary payment: smallest input > smallest output.
+    const minIn = Math.min(...tx.vin.map((v) => Math.round(v.prevout!.value * 1e8)));
+    const minOut = Math.min(...tx.vout.map((o) => Math.round(o.value * 1e8)));
+    assert.ok(minIn > minOut, `UIH2 avoided: min input ${minIn} > min output ${minOut}`);
+  } finally { await server.close(); }
+});

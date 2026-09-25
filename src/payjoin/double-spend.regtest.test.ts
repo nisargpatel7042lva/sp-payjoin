@@ -76,7 +76,7 @@ test('the receiver re-offers that same exposed coin to the next request rather t
     isBroadcastable: async (hex) => (await rpc.testMempoolAccept(hex))[0]!.allowed,
     isOwnedScript: (spk) => Buffer.compare(Buffer.from(spk), receiver.p2wpkh.output!) === 0,
     inputSeenBefore: () => false, markInputSeen: () => {},
-    selectInput: (_o, exposed) => {
+    selectInput: ({ exposed }) => {
       const pick = coins.find((c) => exposed.includes(`${c.txid}:${c.vout}`)) ?? coins.slice().sort((a, b) => b.valueSat - a.valueSat)[0]!;
       offered.push(`${pick.txid}:${pick.vout}`); return pick;
     },
