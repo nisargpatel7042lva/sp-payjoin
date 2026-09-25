@@ -16,7 +16,8 @@
     "demo:sp-payjoin": "tsx scripts/sp-payjoin-demo.ts",
     "spay": "tsx src/cli/spay.ts",
     "demo:two-party": "scripts/two-party-demo.sh",
-    "demo:surveillance": "tsx scripts/surveillance-demo.ts"
+    "demo:surveillance": "tsx scripts/surveillance-demo.ts",
+    "web": "tsx src/web/server.ts"
   },
   "license": "MIT",
   "dependencies": {

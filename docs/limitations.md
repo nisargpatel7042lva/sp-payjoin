@@ -132,6 +132,14 @@ the input sum and is also the scanning party, so no derivation authority is hand
 
 ---
 
+## 11. The web console is untested glue
+
+The two files under `src/web/` are a thin HTTP layer over code the test suite does cover
+(`pay()`, `PayjoinReceiver`, `SpWallet`, the analyst). The layer itself has **no automated test** —
+it is typechecked and was exercised by hand. It is a demo console bound to loopback, not a product:
+no authentication, no CSRF protection, both wallets in one process, and it will spend the payer's
+coins for anyone who can reach the port.
+
 ## Not limitations, just operational notes
 
 - `spay receive` writes a pidfile because `npx`/`tsx` wrappers make `$!` the wrong process.

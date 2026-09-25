@@ -49,6 +49,21 @@ Alice pays Bob 600,000 sat three ways on a real regtest chain — today's reused
 payments, then silent payments + payjoin — and a surveillance tool answers three questions about
 each. It scores **3/3 → 2/3 → 0/3**. Also writes `out/report.html`.
 
+## Click through it
+
+```bash
+./infra/regtest.sh start
+npm run web                 # then open http://127.0.0.1:8080
+```
+
+A local console running both sides in one process: fund the payer, press **Pay**, and watch the
+transaction get built, offered to the receiver, joined or not, broadcast and mined. The toggle
+switches the receiver's payjoin endpoint off so you can watch the same button fall back to a plain
+silent payment. Every payment card shows the inputs with their real owners and what a
+chain-analysis tool concludes. Set `PORT` to use a different port.
+
+Pay twice: the first payment gives the receiver a coin, so the second one has something to join with.
+
 ## Use it
 
 ```bash
