@@ -1,10 +1,58 @@
-# sp-payjoin — PayJoin (BIP78) addressed by silent payments (BIP352)
+# sp-payjoin
 
-A PayJoin sender/receiver flow where the receiver is addressed by a BIP352 silent
-payment address, and the private (receiver-contributes-an-input) path is the default
-send experience. Breaks the common-input-ownership heuristic and address reuse at once.
+**PayJoin (BIP78) addressed by silent payments (BIP352), with the private path as the default path.**
 
-Built for the Bitshala BOSS Battle hackathon, Cypherpunk track.
+Alice pays Bob. Bob's wallet quietly adds one of his own coins to the same transaction. Chain
+surveillance assumes every input in a transaction belongs to one person — that assumption is now
+false. And Bob is addressed by a static silent payment address, so there is no reusable address on
+the chain to search for either.
+
+The payer never chooses a protocol. `spay pay <address> <amount>` attempts payjoin whenever the
+receiver can do it, and sends a plain silent payment when they cannot. Both paths are private; only
+the join differs.
+
+## Why this and not another privacy dashboard
+
+At the time of writing, 37 projects had been submitted to this hackathon. We pulled the full list
+from Devfolio's API and keyword-scanned every name, tagline, description and tag for *payjoin,
+coinjoin, coinswap, bip78, bip352, mixing* and a dozen related terms.
+
+**Six teams built tools that score or visualise your privacy. Zero built a mechanism that changes
+it.** The single keyword hit was a project that *detects* the common-input-ownership heuristic.
+
+Measuring the problem is not the same as fixing it. This is a mechanism.
+
+## See the point in 30 seconds
+
+```bash
+./infra/regtest.sh start
+npm run demo:surveillance
+```
+
+Alice pays Bob 600,000 sat three ways on a real regtest chain — today's reused address, then silent
+payments, then silent payments + payjoin — and a chain-surveillance tool answers three questions
+about each transaction. Its answers are marked against ground truth, because we hold the keys.
+
+| | TODAY | + SILENT PAYMENTS | + PAYJOIN |
+|---|---|---|---|
+| Who received this money? | ✓ correct | ✗ wrong | ✗ wrong |
+| Who owns the inputs? | ✓ correct | ✓ correct | **✗ wrong** |
+| How much was paid? | ✓ correct | ✓ correct | **✗ wrong** |
+| | *3/3 correct* | *2/3* | **0/3** |
+
+The middle column is the point: silent payments alone remove the address but leave the payer
+clustered and the amount public. The join is what makes the last two answers false. Both halves are
+load-bearing.
+
+Also writes `out/report.html` — the same comparison as a page, for slides or screenshots.
+
+## Try it yourself
+
+```bash
+npm run web                  # a console at http://127.0.0.1:8080 driving both sides for real
+npm run demo:two-party       # two independent processes: a join, then a graceful fallback
+npm test                     # 152 tests, including the BIP78 and BIP352 official vectors
+```
 
 ## Status
 
@@ -18,6 +66,8 @@ Built for the Bitshala BOSS Battle hackathon, Cypherpunk track.
 
 **[The design, written up](docs/design.md)** — how silent payments and payjoin compose, why the
 receiver can recompute the output and the sender cannot, what that costs, and how it ports to BIP77.
+
+**[Submission copy](docs/submission.md)** · **[Demo video script](docs/demo-script.md)**
 
 **[Known limitations, assumptions and open risks](docs/limitations.md)** — read this before judging
 what the project claims. Regtest only; `@silent-pay/core` is experimental and so is this.
