@@ -292,7 +292,8 @@ Two design decisions worth flagging to a reviewer:
 We also found a real bug in **Bitshala's own `@silent-pay/core`**: its secp256k1 backend mutates
 private keys in place, so `scanOutputs()` corrupts the caller's scan key — a wallet finds its first
 payment and then never another, silently. Worked around with defensive copies and pinned by a
-regression test; to be reported upstream.
+regression test; report drafted in [docs/upstream-issue.md](docs/upstream-issue.md) with a
+self-contained reproduction ([`scripts/silent-pay-repro.mjs`](scripts/silent-pay-repro.mjs)).
 
 ---
 
