@@ -132,7 +132,26 @@ the input sum and is also the scanning party, so no derivation authority is hand
 
 ---
 
-## 11. The web console is untested glue
+## 11. The sender cannot verify a substituted silent-payment output
+
+A silent-payment payjoin requires output substitution, which removes BIP78's script check on the
+payment output — and BIP352's sender-side derivation needs the private keys of *all* inputs, so the
+sender cannot recompute the substituted output to check it. The sender does enforce that the value
+going to outputs it does not own is at least the amount intended, so a short payment is refused,
+but with an unauthenticated transport a man-in-the-middle could redirect the payment.
+
+This is the composition's one genuine cryptographic gap. `docs/design.md` §"A sketch for closing it"
+proposes a fix (the receiver supplies its half of the ECDH term with a DLEQ proof); it is not
+implemented and has not been reviewed.
+
+## 12. BIP77 is demonstrated in shape only
+
+The sender's transport is injectable and the whole flow runs over an asynchronous directory with the
+receiver hosting nothing — but that directory is **not** BIP77: no HPKE, no ElligatorSwift encoding,
+no padded payloads, no Oblivious HTTP. It sees both PSBTs in plaintext, and a test asserts so. See
+`docs/design.md` §"Porting to BIP77" for the itemised remainder.
+
+## 13. The web console is untested glue
 
 The two files under `src/web/` are a thin HTTP layer over code the test suite does cover
 (`pay()`, `PayjoinReceiver`, `SpWallet`, the analyst). The layer itself has **no automated test** —

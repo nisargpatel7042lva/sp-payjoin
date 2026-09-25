@@ -16,6 +16,9 @@ Built for the Bitshala BOSS Battle hackathon, Cypherpunk track.
 - **Phase 5 — edge cases hardened: done.** See `docs/phase-5.md`. Every failure mode falls back to a plain silent payment.
 - **Phase 6 — privacy-aware coin selection: done.** See `docs/phase-6.md`. The receiver picks a contribution that keeps the transaction in the ordinary-payment shape (avoids UIH2).
 
+**[The design, written up](docs/design.md)** — how silent payments and payjoin compose, why the
+receiver can recompute the output and the sender cannot, what that costs, and how it ports to BIP77.
+
 **[Known limitations, assumptions and open risks](docs/limitations.md)** — read this before judging
 what the project claims. Regtest only; `@silent-pay/core` is experimental and so is this.
 

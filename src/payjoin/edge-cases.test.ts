@@ -314,3 +314,45 @@ test('every well-known error travels over HTTP as JSON the sender can read', asy
     assert.equal(unsignedTx(Psbt.fromBase64(originalOf(p))).ins.length, 1, 'original untouched');
   } finally { await s.close(); }
 });
+
+test('a substituted silent-payment output that short-changes the payer is refused', async () => {
+  // Output substitution removes BIP78's script check on the payment output, and a
+  // silent-payment sender cannot recompute the substituted script to verify it.
+  // The amount is still checkable, and it is.
+  const receiver = new SimpleKey(), sender = new SimpleKey(), change = new SimpleKey();
+  const senderUtxo = utxo(sender, TOTAL, 21);
+  const receiverUtxo = utxo(receiver, 50_000, 22);
+  const outputs = [
+    { scriptPubKey: new Uint8Array(receiver.p2tr.output!), valueSat: PAY },
+    { scriptPubKey: new Uint8Array(change.p2wpkh.output!), valueSat: TOTAL - PAY - FEE },
+  ];
+  const signed = buildPsbt([senderUtxo], outputs);
+  signPsbtInput(signed, 0, senderUtxo);
+  const originalB64 = createOriginalPsbt(signed).toBase64();
+
+  // A malicious proposal: substitutes the payment output to a different script AND
+  // guts its value, keeping the absolute fee legitimate so earlier checks pass.
+  const original = Psbt.fromBase64(originalB64);
+  const tx = finalizedTx(original);
+  const evil = new Psbt();
+  evil.setVersion(tx.version); evil.setLocktime(tx.locktime);
+  evil.addInput({ hash: Buffer.from(tx.ins[0]!.hash), index: tx.ins[0]!.index, sequence: tx.ins[0]!.sequence, witnessUtxo: original.data.inputs[0]!.witnessUtxo! });
+  evil.addInput({ hash: Buffer.from(receiverUtxo.txid, 'hex').reverse(), index: receiverUtxo.vout, sequence: tx.ins[0]!.sequence, witnessUtxo: { script: Buffer.from(receiverUtxo.scriptPubKey), value: receiverUtxo.valueSat } });
+  evil.addOutput({ script: Buffer.from(new SimpleKey().p2tr.output!), value: 1_000 });          // substituted, and tiny
+  evil.addOutput({ script: tx.outs[1]!.script, value: Number(tx.outs[1]!.value) + 49_000 });    // the rest pushed to sender change
+  signPsbtInput(evil, 1, receiverUtxo); evil.finalizeInput(1);
+
+  const s = await rawServer(() => ({ status: 200, body: evil.toBase64() }));
+  try {
+    const broadcast: string[] = [];
+    const r = await payWithPayjoin({
+      uri: buildPjUri({ sp: 'tsp1qqexample', amountSat: PAY, pj: s.url }),
+      inputs: [senderUtxo], outputs, paymentOutputIndex: 0,
+      requestTimeoutMs: 400,
+      broadcast: async (hex) => { broadcast.push(hex); return Transaction.fromHex(hex).getId(); },
+    });
+    assert.equal(r.payjoin, false, 'refused the short payment');
+    assert.match(r.reason ?? '', /pays 1000 < 60000/);
+    assert.equal(r.txid, r.originalTxid, 'the honest original went out instead');
+  } finally { await s.close(); }
+});

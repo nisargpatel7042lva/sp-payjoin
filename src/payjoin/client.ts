@@ -5,8 +5,8 @@
  */
 import { Psbt, Transaction } from 'bitcoinjs-lib';
 import { parseDestination, type Destination } from './uri.js';
-import { buildRequestUrl, checkMinFeeRate, createSenderContext, verifyAndFillProposal, type SenderOptionalParams } from './sender.js';
-import { postOriginalPsbt } from './http.js';
+import { checkMinFeeRate, createSenderContext, verifyAndFillProposal, type SenderOptionalParams } from './sender.js';
+import { httpV1Transport, type PayjoinTransport } from './transport.js';
 import { buildPsbt, extractTx, finalizePsbt, signPsbtInput } from '../wallet/psbt-wallet.js';
 import { finalizedTx, psbtFee } from './psbt-utils.js';
 import type { KeyedUtxo, TxOut } from '../wallet/simple.js';
@@ -27,6 +27,14 @@ export interface PayjoinSendParams {
   network?: Network;
   /** Give up on the endpoint after this long and send directly. @default 30000 */
   requestTimeoutMs?: number;
+  /**
+   * How the original PSBT reaches the receiver and the proposal comes back.
+   * Defaults to BIP78 v1: an HTTP POST to the `pj=` endpoint. Everything above
+   * and below this call — building the payment, the proposal checklist, signing,
+   * the fallback — is transport-independent, which is what lets the same code
+   * run over an asynchronous, store-and-forward transport (see `transport.ts`).
+   */
+  transport?: PayjoinTransport;
   broadcast(txHex: string): Promise<string>;
   log?: (s: string) => void;
 }
@@ -43,6 +51,7 @@ export interface PayjoinSendResult {
 
 export async function payWithPayjoin(p: PayjoinSendParams): Promise<PayjoinSendResult> {
   const uri = typeof p.uri === 'string' ? parseDestination(p.uri) : p.uri;
+  const amountSat = p.outputs[p.paymentOutputIndex]!.valueSat;
   const log = p.log ?? (() => {});
   const network = p.network ?? networks.regtest;
   // Resolve silent-payment placeholders: derive the BIP352 output(s) from our inputs.
@@ -83,7 +92,8 @@ export async function payWithPayjoin(p: PayjoinSendParams): Promise<PayjoinSendR
   }
   let proposalBase64: string;
   try {
-    proposalBase64 = await postOriginalPsbt(buildRequestUrl(uri.pj, params), originalBase64, { timeoutMs: p.requestTimeoutMs });
+    const transport = p.transport ?? httpV1Transport;
+    proposalBase64 = await transport.exchange({ endpoint: uri.pj, originalBase64, params, timeoutMs: p.requestTimeoutMs });
   } catch (e) {
     log(`payjoin request failed (${(e as Error).message}); broadcasting original`);
     const txid = await p.broadcast(originalTx.toHex());
@@ -99,6 +109,29 @@ export async function payWithPayjoin(p: PayjoinSendParams): Promise<PayjoinSendR
     const txid = await p.broadcast(originalTx.toHex());
     return { txid, payjoin: false, tx: originalTx, originalTxid: originalTx.getId(), originalBase64, proposalBase64, reason: (e as Error).message };
   }
+  // Silent-payment destinations must allow output substitution (the receiver has to
+  // recompute the output for the joined input set), which removes BIP78's script check
+  // on the payment output. BIP352's sender-side derivation needs the private keys of
+  // *all* inputs, so the sender cannot recompute the substituted output and verify it
+  // — see docs/design.md §"What the sender cannot check". What the sender can still
+  // enforce is the amount: everything not paying one of its own outputs must be at
+  // least what it meant to pay.
+  if (uri.sp) {
+    const ownScripts = outputs.filter((_, i) => i !== p.paymentOutputIndex).map((o) => Buffer.from(o.scriptPubKey).toString('hex'));
+    const remaining = [...ownScripts];
+    let toReceiver = 0;
+    for (const o of proposal.txOutputs) {
+      const hex = Buffer.from(o.script).toString('hex');
+      const at = remaining.indexOf(hex);
+      if (at >= 0) remaining.splice(at, 1); else toReceiver += Number(o.value);
+    }
+    if (toReceiver < amountSat) {
+      log(`proposal pays the receiver ${toReceiver} sat, less than the ${amountSat} sat intended; broadcasting original`);
+      const txid = await p.broadcast(originalTx.toHex());
+      return { txid, payjoin: false, tx: originalTx, originalTxid: originalTx.getId(), originalBase64, proposalBase64, reason: `substituted output pays ${toReceiver} < ${amountSat}` };
+    }
+  }
+
   // Sign, finalise and run the last checks. Anything wrong here — a fee rate below
   // `minfeerate`, a proposal that will not finalise — means the payjoin is abandoned
   // and the original goes out instead; the payment still happens either way.
