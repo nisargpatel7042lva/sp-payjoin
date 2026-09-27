@@ -56,7 +56,7 @@ is permitted. So:
    would over a chain transaction, and learns which output pays it. No invoice identifier, no
    session state, no lookup table — the cryptography is the addressing.
 4. **Contribution.** The receiver adds one of its own inputs, chosen so the result keeps the
-   ordinary-payment shape (see `docs/phase-6.md`).
+   ordinary-payment shape (see `docs/build-log/phase-6.md`).
 5. **Recomputation.** The input set has changed, so the receiver recomputes the output for the new
    set. It can, using only public data and its own scan key:
 
@@ -170,7 +170,7 @@ transport-independence and document the remainder rather than ship a half-built 
 | Address reuse — link every payment to one recipient | defeats the receiver | **no address on chain** | no address on chain |
 | Common-input-ownership — all inputs share an owner | holds | holds | **false** |
 | Payment-amount inference | correct | correct | **inflated by the contribution** |
-| UIH2 — an unnecessary input betrays a payjoin | n/a | n/a | avoided by coin selection (`docs/phase-6.md`) |
+| UIH2 — an unnecessary input betrays a payjoin | n/a | n/a | avoided by coin selection (`docs/build-log/phase-6.md`) |
 
 Measured on real transactions by `npm run demo:surveillance`, which scores a naive analyst
 **3/3 → 2/3 → 0/3** across those three cases.

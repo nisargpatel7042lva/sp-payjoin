@@ -154,4 +154,4 @@ The form requires genuine screenshots of the running project. Capture these:
 
 ## video_url
 
-See `docs/demo-script.md` for a shot-by-shot 90-second script.
+See `docs/internal/demo-script.md` for a shot-by-shot 90-second script.

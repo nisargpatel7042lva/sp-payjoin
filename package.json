@@ -2,7 +2,21 @@
   "name": "sp-payjoin",
   "version": "0.0.1",
   "private": true,
-  "description": "PayJoin (BIP78) with silent payment (BIP352) addressing — private by default",
+  "description": "PayJoin (BIP78) with silent payment (BIP352) addressing \u2014 private by default",
+  "license": "MIT",
+  "keywords": [
+    "bitcoin",
+    "payjoin",
+    "bip78",
+    "silent-payments",
+    "bip352",
+    "privacy"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nisargpatel7042lva/sp-payjoin.git"
+  },
+  "homepage": "https://github.com/nisargpatel7042lva/sp-payjoin#readme",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -19,7 +33,6 @@
     "demo:surveillance": "tsx scripts/surveillance-demo.ts",
     "web": "tsx src/web/server.ts"
   },
-  "license": "MIT",
   "dependencies": {
     "@silent-pay/core": "^0.0.6",
     "bip66": "^2.0.0",

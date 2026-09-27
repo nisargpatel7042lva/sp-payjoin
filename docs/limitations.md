@@ -63,7 +63,7 @@ that in, plus tracking block hashes so a reorg can be detected and rescanned, is
   signal RBF with sequence `0xfffffffd`, but nothing ever bumps them).
 - **Receiver**: *fixed in Phase 6* — it now contributes the smallest coin that keeps the
   transaction in the ordinary-payment shape (avoiding UIH2), preferring an already-exposed coin.
-  See `docs/phase-6.md`. The remaining limit is real: if every coin the receiver holds is smaller
+  See `docs/build-log/phase-6.md`. The remaining limit is real: if every coin the receiver holds is smaller
   than the sender's change, no choice avoids UIH2 and the code falls back rather than pretending.
 
 BIP78 also mentions adding a round-amount output during "spare change" situations to poison

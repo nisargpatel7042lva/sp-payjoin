@@ -4,7 +4,7 @@
 by default, not a setting you remember to switch on.**
 
 Built for the **Bitshala BOSS Battle** hackathon, **Cypherpunk** track.
-[Design write-up](docs/design.md) · [Limitations](docs/limitations.md) · [Submission copy](docs/submission.md) · [Demo script](docs/demo-script.md)
+[Design write-up](docs/design.md) · [Limitations](docs/limitations.md) · [Build log](docs/build-log/)
 
 ---
 
@@ -313,11 +313,10 @@ The library this builds on says it is experimental. So is this.
 
 | Document | What's in it |
 |---|---|
-| [docs/design.md](docs/design.md) | The composition as a spec: the obstruction, the mechanism, the asymmetry, the BIP77 port, prior-art status |
-| [docs/limitations.md](docs/limitations.md) | Thirteen known gaps, each with why it's there and what closing it takes |
-| [docs/phase-0.md](docs/phase-0.md) … [phase-6.md](docs/phase-6.md) | Build log: what was made, tested and found at each stage |
-| [docs/submission.md](docs/submission.md) | Devfolio copy |
-| [docs/demo-script.md](docs/demo-script.md) | 90-second video script, shot by shot |
+| [docs/design.md](docs/design.md) | **The contribution, as a spec.** The obstruction, the mechanism, the asymmetry the sender cannot escape, the BIP77 port, prior-art status |
+| [docs/limitations.md](docs/limitations.md) | **Thirteen known gaps**, each with why it is there and what closing it takes |
+| [docs/upstream-issue.md](docs/upstream-issue.md) | A bug we found in Bitshala's own `@silent-pay/core`, with a runnable reproduction |
+| [docs/build-log/](docs/build-log/) | How it was built, phase by phase — each one tested before the next began |
 
 ## Layout
 
