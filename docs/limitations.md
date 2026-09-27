@@ -119,7 +119,8 @@ We pass defensive copies in `src/sp/keys.ts` and pin the behaviour with a regres
 (`src/sp/keys.test.ts`). A report is drafted with a self-contained reproduction, the root cause
 (`secp256k1`'s `privateKeyTweak*` write into their first argument), the affected/unaffected
 functions, and a patch: `docs/upstream-issue.md`, repro at `scripts/silent-pay-repro.mjs`.
-**Not yet filed** — it should be posted from the project owner's own account.
+**Not yet filed** — it should be posted from the project owner's own account. Five further library
+quirks we had to work around are collected in [library-notes.md](library-notes.md).
 
 ## 10. Cryptographic caveat we inherit
 

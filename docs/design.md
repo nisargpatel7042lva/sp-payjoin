@@ -205,6 +205,7 @@ Foundation's work before repeating a novelty claim.
   for the single-output case.
 - `@silent-pay/core@0.0.6` mutates private keys in place inside `scanOutputs`, silently corrupting a
   wallet's scan key after one call. Worked around with defensive copies (`src/sp/keys.ts`) and
-  pinned by a regression test. Should be reported upstream.
+  pinned by a regression test. Should be reported upstream. This and five other library quirks are
+  written up in `docs/library-notes.md`.
 - Conformance: the BIP78 sender reproduces the BIP's own test vectors byte-for-byte; all 28 BIP352
   send/receive vectors pass through this implementation's derivation layer.

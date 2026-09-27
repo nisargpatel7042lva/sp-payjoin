@@ -294,6 +294,9 @@ private keys in place, so `scanOutputs()` corrupts the caller's scan key — a w
 payment and then never another, silently. Worked around with defensive copies and pinned by a
 regression test; report drafted in [docs/upstream-issue.md](docs/upstream-issue.md) with a
 self-contained reproduction ([`scripts/silent-pay-repro.mjs`](scripts/silent-pay-repro.mjs)).
+It was one of **six** library quirks we had to wrap — four of them surfaced by running the official
+BIP352 vectors through our own layer rather than trusting the library with them
+([docs/library-notes.md](docs/library-notes.md)).
 
 ---
 
@@ -315,6 +318,7 @@ The library this builds on says it is experimental. So is this.
 |---|---|
 | [docs/design.md](docs/design.md) | **The contribution, as a spec.** The obstruction, the mechanism, the asymmetry the sender cannot escape, the BIP77 port, prior-art status |
 | [docs/limitations.md](docs/limitations.md) | **Thirteen known gaps**, each with why it is there and what closing it takes |
+| [docs/library-notes.md](docs/library-notes.md) | Six library quirks we had to wrap, and how each was caught |
 | [docs/upstream-issue.md](docs/upstream-issue.md) | A bug we found in Bitshala's own `@silent-pay/core`, with a runnable reproduction |
 | [docs/build-log/](docs/build-log/) | How it was built, phase by phase — each one tested before the next began |
 
