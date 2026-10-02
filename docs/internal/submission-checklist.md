@@ -28,21 +28,26 @@ confirm:
 ## 2. Screenshots (20 min)
 
 The form requires **1–6 real screenshots** and explicitly forbids generated stand-ins. Save them to
-`screenshots/` in the repo folder — that directory is gitignored, so they stay off GitHub as you
-wanted, while remaining next to the project on your machine.
+`screenshots/` — that folder is gitignored, so they stay off GitHub while sitting beside the project.
 
-Capture in this order; **#1 is the one that wins or loses attention.**
+Order matters: Devfolio shows the first one as the card image, so **#1 is what most judges will ever
+see of this project.**
 
-| # | What | How to get it | Must be visible |
+| # | What | Command | Must be legible in frame |
 |---|---|---|---|
-| 1 | **The surveillance table** | `npm run demo:surveillance`, screenshot the final screen | the three columns and the `3/3 · 2/3 · 0/3` line |
-| 2 | **The report page** | open `out/report.html` in a browser | the three scenario cards and the red/green verdicts |
-| 3 | **The web console, mid-join** | `npm run web`, Fund → Pay → Pay, screenshot after the second | a card reading *"payjoin — receiver contributed an input"* with the WRONG verdicts |
-| 4 | **The test suite** | `npm test`, screenshot the tail | `152 pass`, `0 fail` |
-| 5 | *(optional)* **Two-party flow** | `npm run demo:two-party` | the join and the fallback in one frame |
+| **1** | **The surveillance table** | `npm run demo:surveillance` | all three columns and the `3/3 · 2/3 · 0/3` line. **Widen the terminal to ≥100 columns first** (`tput cols`) or it wraps into mush |
+| **2** | **Core judging a real vs. tampered transaction** | `npm run verify:real` | both result lines — `allowed = true` and `Invalid Schnorr signature` |
+| **3** | **The architecture** | `npm run arch` | the two protocol layers and the "one send path" block |
+| **4** | **A real join happening between two processes** | `npm run demo:two-party` | the `payjoin tx … 2 in / 2 out` line and the receiver's `← payjoin request: contributed …` line |
+| **5** | **The test suite** | `npm test` | `152 pass`, `0 fail` |
+| 6 | *(optional)* **The report page** | open `out/report.html` | the three cards with their red/green verdicts — the only non-terminal shot, worth including for visual variety |
 
-Before each shot: terminal font **16pt+**, full screen, no notifications, no other tabs. Crop out
-your taskbar and anything personal.
+Why this order: #1 is the claim, #2 is the proof it is not faked, #3 is what you built, #4 is it
+working between two parties, #5 is rigour. A judge who looks at only the first two has seen the
+whole argument.
+
+Before every shot: terminal **16pt or larger**, full screen, dark theme, notifications off, and
+crop out your taskbar and anything with your name in it.
 
 ## 3. Video (30 min including retakes)
 
