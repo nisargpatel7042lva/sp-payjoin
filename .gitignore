@@ -12,3 +12,6 @@ screenshots/
 *.jpeg
 *.mp4
 *.mov
+
+# submission prep — stays local, not for judges
+docs/internal/
