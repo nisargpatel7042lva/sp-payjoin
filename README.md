@@ -8,20 +8,6 @@ Built for the **Bitshala BOSS Battle** hackathon, **Cypherpunk** track.
 
 ---
 
-## The gap this fills
-
-Thirty-seven projects were submitted to this hackathon. We pulled the full list from Devfolio's API
-and keyword-scanned every name, tagline, description and tag for *payjoin, coinjoin, coinswap,
-bip78, bip352, mixing* and a dozen related terms.
-
-> **Six teams built tools that score or visualise your Bitcoin privacy. Zero built a mechanism that
-> changes it.** The single keyword hit was a project that *detects* the common-input-ownership
-> heuristic.
-
-Measuring the problem is not fixing it. This is a mechanism.
-
----
-
 ## What it does
 
 Every Bitcoin payment leaks two things:

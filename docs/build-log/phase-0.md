@@ -1,21 +1,4 @@
-# Phase 0 — validate + environment (2026-09-21)
-
-## Competitive gap (re-confirmed)
-
-Pulled all 37 BOSS Battle submissions from Devfolio's API (`boss-battle`, hackathon uuid
-`ccf87307…`) and scanned **name, tagline, full description, hashtags and links** of every project
-for: payjoin, bip78/77, coinjoin, coinswap, whirlpool, wabisabi, joinmarket, bip352, stonewall,
-common-input, mixing/mixer/tumbler.
-
-- Mechanism implementations found: **none**.
-- Only heuristic hit: **SatoshiTrace** — runs address-reuse / common-input-ownership *detection*
-  ("watch it run the exact same heuristics surveillance firms use"). A dashboard, not a mechanism.
-- Privacy-scoring dashboards (the crowded lane): BlockShield AI, Satoshi Sentinel, SatoshiTrace,
-  ShadowSync Agent, CypherStack, Cypherpunk — six.
-- Non-obvious names checked by full text + source: **MeCuadra** (barter app; its "silent payment code"
-  is a bech32m `sp…` string derived from a Nostr key used as a chat contact secret — no Bitcoin
-  transactions), **Entropy Trace** (randomness tracing), **W-TVC Protocol** (AI model downgrade
-  fraud), Lifeboat (LND channel recovery), Stegashareus (seed storage).
+# Phase 0 — environment and the BIP352 baseline (2026-09-21)
 
 ## Environment
 
