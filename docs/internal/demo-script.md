@@ -26,15 +26,33 @@ clear
 
 ---
 
-## 0:00 – 0:15 · The gap
+## 0:00 – 0:15 · The assumption
 
-**Screen:** terminal, blank.
+**Screen:** terminal, blank. Nothing moves. Let the claim land before anything happens.
 **Say:**
 
-> "Thirty-seven projects were submitted to this hackathon. Six of them score or visualise your
-> Bitcoin privacy. Zero change it. We built a mechanism, not a dashboard."
+> "Almost every Bitcoin surveillance tool rests on one assumption: if a transaction spends several
+> coins, one person owns them all. It's right almost every time — it's how wallets get clustered,
+> how exchanges build profiles, how a payment gets traced back to you.
+>
+> We made it wrong."
 
-*Nothing on screen yet. Let the claim land before anything moves.*
+### Two alternates, if that voice isn't yours
+
+**The two leaks** — plainer, better if the judge may not be deep in Bitcoin:
+
+> "Pay someone in Bitcoin and you leak two things you never agreed to: who you paid, because
+> addresses get reused — and which coins are yours, because everything you spend together gets
+> filed under one name. This fixes both, in a single transaction, and nobody has to switch
+> anything on."
+
+**The strange fact** — most arresting, drops you straight into the mechanism:
+
+> "In the transaction I'm about to show you, the person being paid secretly added their own money
+> to it. Their wallet did that automatically. The payer never knew, never chose it — and that one
+> move breaks the main tool chain surveillance runs on."
+
+*Pick one and commit. Don't stack them.*
 
 ## 0:15 – 0:40 · What it is
 
@@ -130,7 +148,11 @@ clear
 > we're reporting it upstream with a patch.
 >
 > It's regtest only, and every limitation is written down in the repo, including the one thing this
-> composition can't do yet. Mechanism, not a dashboard."
+> composition still can't do. Plenty of projects will tell you how exposed you are. This one
+> changes it."
+
+*The last line is where the "dashboards vs mechanism" point belongs — after they have watched it
+work, not before. Said up front it sounds like positioning; said here it sounds like a result.*
 
 ---
 
@@ -138,7 +160,7 @@ clear
 
 | Time | Command | The point being made |
 |---|---|---|
-| 0:00 | *(nothing)* | six dashboards, zero mechanisms |
+| 0:00 | *(nothing)* | the assumption surveillance rests on — and that we broke it |
 | 0:15 | `npm run arch` | what was built, and that privacy is the default |
 | 0:40 | *(same screen)* | why combining the two BIPs is non-obvious |
 | 1:05 | `npm run demo:surveillance` | **3/3 → 2/3 → 0/3** |
@@ -148,7 +170,7 @@ clear
 
 ## The 90-second cut
 
-Keep **0:00 the gap**, **1:05 the surveillance table**, **2:15 verify:real**, and a 10-second close.
+Keep **0:00 the assumption**, **1:05 the surveillance table**, **2:15 verify:real**, and a 10-second close.
 Drop the architecture and two-party sections. The table is non-negotiable; it is the only thing a
 judge will still remember tomorrow.
 
