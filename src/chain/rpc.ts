@@ -25,7 +25,7 @@ export class BitcoinRpc {
   getBlockCount() { return this.call<number>('getblockcount'); }
   getRawTransaction(txid: string) { return this.call<DecodedTx>('getrawtransaction', txid, true); }
   sendRawTransaction(hex: string) { return this.call<string>('sendrawtransaction', hex); }
-  testMempoolAccept(hex: string) { return this.call<Array<{ allowed: boolean; 'reject-reason'?: string }>>('testmempoolaccept', [hex]); }
+  testMempoolAccept(hex: string) { return this.call<Array<{ allowed: boolean; 'reject-reason'?: string; vsize?: number; fees?: { base: number } }>>('testmempoolaccept', [hex]); }
   getBlockHash(height: number) { return this.call<string>('getblockhash', height); }
   /** Verbosity 3: transactions with `prevout` on every non-coinbase input (what SP scanning needs). */
   getBlock(hash: string) { return this.call<{ height: number; tx: DecodedTx[] }>('getblock', hash, 3); }

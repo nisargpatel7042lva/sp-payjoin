@@ -31,7 +31,9 @@
     "spay": "tsx src/cli/spay.ts",
     "demo:two-party": "scripts/two-party-demo.sh",
     "demo:surveillance": "tsx scripts/surveillance-demo.ts",
-    "web": "tsx src/web/server.ts"
+    "web": "tsx src/web/server.ts",
+    "verify:real": "tsx scripts/verify-real.ts",
+    "arch": "tsx scripts/architecture.ts"
   },
   "dependencies": {
     "@silent-pay/core": "^0.0.6",
