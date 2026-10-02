@@ -33,7 +33,8 @@
     "demo:surveillance": "tsx scripts/surveillance-demo.ts",
     "web": "tsx src/web/server.ts",
     "verify:real": "tsx scripts/verify-real.ts",
-    "arch": "tsx scripts/architecture.ts"
+    "arch": "tsx scripts/architecture.ts",
+    "flow": "tsx scripts/flow.ts"
   },
   "dependencies": {
     "@silent-pay/core": "^0.0.6",

@@ -188,6 +188,7 @@ clustered and the amount public — **both halves are load-bearing**. The demo a
 ./infra/regtest.sh start     # a dedicated regtest node, its own datadir and port
 
 npm run arch                 # what every part of the codebase does, with live figures
+npm run flow                 # the payment flow as a diagram, and where the new idea sits
 npm run demo:surveillance    # the before/after table above
 npm run demo:two-party       # two independent processes: a join, then a graceful fallback
 npm run verify:real          # Bitcoin Core accepts our payjoin, and rejects it with one byte changed

@@ -37,10 +37,11 @@ see of this project.**
 |---|---|---|---|
 | **1** | **The surveillance table** | `npm run demo:surveillance` | all three columns and the `3/3 · 2/3 · 0/3` line. **Widen the terminal to ≥100 columns first** (`tput cols`) or it wraps into mush |
 | **2** | **Core judging a real vs. tampered transaction** | `npm run verify:real` | both result lines — `allowed = true` and `Invalid Schnorr signature` |
-| **3** | **The architecture** | `npm run arch` | the two protocol layers and the "one send path" block |
-| **4** | **A real join happening between two processes** | `npm run demo:two-party` | the `payjoin tx … 2 in / 2 out` line and the receiver's `← payjoin request: contributed …` line |
-| **5** | **The test suite** | `npm test` | `152 pass`, `0 fail` |
-| 6 | *(optional)* **The report page** | open `out/report.html` | the three cards with their red/green verdicts — the only non-terminal shot, worth including for visual variety |
+| **3** | **The payment flow** | `npm run flow` | the four receiver steps, especially *recompute P'*, and the green banner |
+| **4** | **The architecture** | `npm run arch` | the two protocol layers and the "one send path" block |
+| **5** | **A real join happening between two processes** | `npm run demo:two-party` | the `payjoin tx … 2 in / 2 out` line and the receiver's `← payjoin request: contributed …` line |
+| **6** | **The test suite** | `npm test` | `152 pass`, `0 fail` |
+| — | *(cut if over 6)* **The report page** | open `out/report.html` | the three cards with their red/green verdicts — the only non-terminal shot, worth including for visual variety |
 
 Why this order: #1 is the claim, #2 is the proof it is not faked, #3 is what you built, #4 is it
 working between two parties, #5 is rigour. A judge who looks at only the first two has seen the
