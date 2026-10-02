@@ -61,8 +61,8 @@ sequenceDiagram
     Note over N: 2 inputs, 2 owners.<br/>"All inputs share one owner" is now false.
 ```
 
-Step 4 is worth pausing on: the receiver figures out which output pays it **by scanning the sender's
-PSBT with its scan key** — the same operation it would run on a chain transaction. No invoice
+The unnumbered step between 3 and 4 is the one to pause on: the receiver figures out which output
+pays it **by scanning the sender's PSBT with its scan key** — the same operation it would run on a chain transaction. No invoice
 identifier, no database, no session. The cryptography *is* the addressing, which is what makes a
 single static address workable for a payjoin receiver.
 
@@ -117,23 +117,28 @@ There is no privacy flag. The same command handles every case; only the outcome 
 
 ```mermaid
 flowchart TB
-    START(["spay pay tsp1... 400000<br/>no protocol flag, ever"]) --> BUILD["Derive the BIP352 output<br/>Build + sign a complete silent payment"]
-    BUILD --> Q1{"Receiver advertises<br/>a payjoin endpoint?"}
+    START(["spay pay tsp1... 400000"])
+    BUILD["Derive the BIP352 output<br/>Build and sign a complete silent payment"]
+    Q1{"Receiver advertises a payjoin endpoint?"}
+    ASK["Send the original to the receiver"]
+    Q2{"Receiver answers with a proposal?"}
+    Q3{"Proposal passes the BIP78 sender checklist?"}
+    JOIN["Sign our inputs only<br/>Broadcast the JOINED transaction"]
+    FB["Broadcast the original<br/>no endpoint · offline · hangs · no coin to contribute<br/>refused · fee cheat · below minfeerate · malformed"]
+    G1(["Address hidden + inputs mixed"])
+    G2(["Address hidden"])
 
-    Q1 -- no --> FB
-    Q1 -- yes --> ASK["Send the original to the receiver"]
-    ASK --> Q2{"Receiver answers<br/>with a proposal?"}
-
-    Q2 -- "offline / hangs / no coin<br/>to contribute / refuses" --> FB
-    Q2 -- yes --> CHECK{"Proposal passes the<br/>BIP78 sender checklist?"}
-
-    CHECK -- "fee cheat, short payment,<br/>below minfeerate, malformed" --> FB
-    CHECK -- yes --> JOIN["Sign our inputs only<br/>Broadcast the JOINED transaction"]
-
-    FB["Broadcast the original"]
-
-    JOIN --> G1(["Address hidden + inputs mixed"])
-    FB --> G2(["Address hidden"])
+    START --> BUILD
+    BUILD --> Q1
+    Q1 -->|yes| ASK
+    Q1 -->|no| FB
+    ASK --> Q2
+    Q2 -->|yes| Q3
+    Q2 -->|no| FB
+    Q3 -->|yes| JOIN
+    Q3 -->|no| FB
+    JOIN --> G1
+    FB --> G2
 
     style JOIN fill:#e3f5ec,stroke:#0e7350,color:#000
     style G1 fill:#e3f5ec,stroke:#0e7350,color:#000
@@ -182,10 +187,21 @@ clustered and the amount public — **both halves are load-bearing**. The demo a
 ```bash
 ./infra/regtest.sh start     # a dedicated regtest node, its own datadir and port
 
-npm run web                  # console at http://127.0.0.1:8080 — click Fund, then Pay, twice
+npm run arch                 # what every part of the codebase does, with live figures
 npm run demo:surveillance    # the before/after table above
 npm run demo:two-party       # two independent processes: a join, then a graceful fallback
+npm run verify:real          # Bitcoin Core accepts our payjoin, and rejects it with one byte changed
+npm run web                  # console at http://127.0.0.1:8080 — click Fund, then Pay, twice
 npm test                     # 152 tests
+```
+
+`npm run verify:real` is the one to run if you doubt any of this is genuine: it builds a real
+payjoin, holds it back from the network, and lets Bitcoin Core judge it — intact, then with a single
+byte altered inside a signature.
+
+```
+→ Core validates the real transaction:   allowed = true   (vsize 212, fee 0.00000826 BTC)
+→ one byte changed in a signature:       allowed = false  (Invalid Schnorr signature)
 ```
 
 **In the web console:** press **Pay** once and it falls back (the receiver has no coin to contribute
@@ -286,7 +302,7 @@ Two design decisions worth flagging to a reviewer:
 | **152 tests**, 0 skipped | run `npm test` |
 | **BIP78 conformance** | the sender reproduces the BIP's own test vectors **byte-for-byte** |
 | **BIP352 conformance** | all **28** official send/receive vectors pass through our derivation layer |
-| **17 failure modes** | offline, hangs, no coin, fee cheating, replay, reentrancy, probing, double-spend — each ends in a completed payment |
+| **18 failure modes** | offline, hangs, no coin, fee cheating, replay, reentrancy, probing, double-spend — each ends in a completed payment |
 | **Live chain** | every end-to-end test builds, signs, broadcasts and mines on regtest |
 
 We also found a real bug in **Bitshala's own `@silent-pay/core`**: its secp256k1 backend mutates

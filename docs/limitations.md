@@ -94,7 +94,7 @@ precise about what that means:
 | **BIP21 for silent payments** | `bitcoin:?sp=<tsp1…>` is **our convention** — no BIP defines a URI form for silent payments yet. A bare address and an address in the URI path are also accepted. If a standard lands, this is a one-function change. |
 | **Multiple silent-payment outputs in one payjoin** | The code path exists (`substituteOutput` receives the output's index `k`), but is **untested** beyond the single-output case. |
 | **Batching / multiple recipients** | Supported by the sender library, not exposed by the CLI. |
-| **BIP78 v2 (BIP77)** | Not implemented. We deliberately chose v1 after finding the official `payjoin` WASM bindings are v2-only and would have required a payjoin-directory and OHTTP relay in the critical path. |
+| **BIP78 v2 (BIP77)** | Not implemented as a wire protocol. We chose v1 deliberately after finding the official `payjoin` WASM bindings are v2-only and would have dragged a payjoin-directory and OHTTP relay into the critical path. The *shape* is demonstrated — see §12. |
 | **`witnessUtxo` on the sender's inputs in the proposal** | We keep it, matching BIP78's own test vector and BTCPay's behaviour; the sender refills it regardless. A deviation from the strictest reading of the text, and an intentional one. |
 | **Third-party interop** | Never tested against BTCPay, JoinMarket or Wasabi. Correctness rests on BIP78's published vectors (which we reproduce byte-for-byte) and on Bitcoin Core validating every transaction. |
 
