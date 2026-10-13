@@ -1,8 +1,11 @@
-# Draft issue for Bitshala-Incubator/silent-pay
+# Upstream issue: `@silent-pay/core` scan-key mutation
 
-Not yet filed — see the note at the bottom.
-Checked against open issues: not a duplicate (#97 is the wallet package replacing its UTXO set;
-this is `core` mutating a caller's key).
+Filed 2026-10-13 as
+[Bitshala-Incubator/silent-pay#105](https://github.com/Bitshala-Incubator/silent-pay/issues/105).
+
+Verified before filing: `@silent-pay/core` still at 0.0.6, the offending line unchanged on `main`,
+no duplicate among the repo's open issues, and `scripts/silent-pay-repro.mjs` still reproduces.
+Our workaround stays in `src/sp/keys.ts` (defensive copies), pinned by `src/sp/keys.test.ts`.
 
 ---
 
@@ -137,10 +140,8 @@ Happy to open a PR with the fix plus the mutation tests if that is useful.
 
 ---
 
-## Note before filing
+## Follow-up
 
-This is an outward-facing post to a third-party repository under the maintainers' eyes during the
-hackathon they are judging. File it from the project owner's own GitHub account, and consider
-offering the PR — a fix plus tests lands better than a report alone.
+A PR with the one-line fix plus mutation-assertion tests is offered in the issue.
 
 Repro script also at `scripts/silent-pay-repro.mjs`.

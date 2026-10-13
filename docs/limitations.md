@@ -116,11 +116,12 @@ prober learns one coin rather than walking the wallet. Two gaps remain:
 symptom is a wallet that finds its first payment and then never finds another.
 
 We pass defensive copies in `src/sp/keys.ts` and pin the behaviour with a regression test
-(`src/sp/keys.test.ts`). A report is drafted with a self-contained reproduction, the root cause
-(`secp256k1`'s `privateKeyTweak*` write into their first argument), the affected/unaffected
-functions, and a patch: `docs/upstream-issue.md`, repro at `scripts/silent-pay-repro.mjs`.
-**Not yet filed** — it should be posted from the project owner's own account. Five further library
-quirks we had to work around are collected in [library-notes.md](library-notes.md).
+(`src/sp/keys.test.ts`). **Reported upstream** as
+[Bitshala-Incubator/silent-pay#105](https://github.com/Bitshala-Incubator/silent-pay/issues/105),
+with a self-contained reproduction, the root cause (`secp256k1`'s `privateKeyTweak*` write into
+their first argument), the affected/unaffected functions, and a patch:
+`docs/upstream-issue.md`, repro at `scripts/silent-pay-repro.mjs`. Five further library quirks we
+had to work around are collected in [library-notes.md](library-notes.md).
 
 ## 10. Cryptographic caveat we inherit
 

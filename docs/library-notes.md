@@ -28,8 +28,9 @@ argument; the `publicKeyTweak*` pair do not. So `scanOutputsWithTweak()` is unaf
 `calculateSumOfPrivateKeys()` escapes only because it tweaks arrays it built itself — one refactor
 from biting.
 
-Pinned by `src/sp/keys.test.ts`. Full report with a runnable reproduction:
-[upstream-issue.md](upstream-issue.md) · repro: [`scripts/silent-pay-repro.mjs`](../scripts/silent-pay-repro.mjs).
+Pinned by `src/sp/keys.test.ts`. Reported upstream as
+[Bitshala-Incubator/silent-pay#105](https://github.com/Bitshala-Incubator/silent-pay/issues/105);
+full write-up with a runnable reproduction: [upstream-issue.md](upstream-issue.md) · repro: [`scripts/silent-pay-repro.mjs`](../scripts/silent-pay-repro.mjs).
 
 ## 2. `createOutputs()` does not return a scriptPubKey
 
