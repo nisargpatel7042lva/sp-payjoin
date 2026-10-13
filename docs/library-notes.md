@@ -29,7 +29,8 @@ argument; the `publicKeyTweak*` pair do not. So `scanOutputsWithTweak()` is unaf
 from biting.
 
 Pinned by `src/sp/keys.test.ts`. Reported upstream as
-[Bitshala-Incubator/silent-pay#105](https://github.com/Bitshala-Incubator/silent-pay/issues/105);
+[Bitshala-Incubator/silent-pay#105](https://github.com/Bitshala-Incubator/silent-pay/issues/105)
+and fixed in [PR #106](https://github.com/Bitshala-Incubator/silent-pay/pull/106);
 full write-up with a runnable reproduction: [upstream-issue.md](upstream-issue.md) · repro: [`scripts/silent-pay-repro.mjs`](../scripts/silent-pay-repro.mjs).
 
 ## 2. `createOutputs()` does not return a scriptPubKey

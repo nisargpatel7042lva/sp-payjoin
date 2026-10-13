@@ -1,7 +1,9 @@
 # Upstream issue: `@silent-pay/core` scan-key mutation
 
 Filed 2026-10-13 as
-[Bitshala-Incubator/silent-pay#105](https://github.com/Bitshala-Incubator/silent-pay/issues/105).
+[Bitshala-Incubator/silent-pay#105](https://github.com/Bitshala-Incubator/silent-pay/issues/105),
+fixed by
+[PR #106](https://github.com/Bitshala-Incubator/silent-pay/pull/106) (open).
 
 Verified before filing: `@silent-pay/core` still at 0.0.6, the offending line unchanged on `main`,
 no duplicate among the repo's open issues, and `scripts/silent-pay-repro.mjs` still reproduces.
@@ -142,6 +144,14 @@ Happy to open a PR with the fix plus the mutation tests if that is useful.
 
 ## Follow-up
 
-A PR with the one-line fix plus mutation-assertion tests is offered in the issue.
+[PR #106](https://github.com/Bitshala-Incubator/silent-pay/pull/106) carries the fix: copy the
+scan key before `privateKeyTweakMul` tweaks it, the same copy in `handleLabels` so the invariant
+holds at every call site, and four tests under `Scanning: caller-owned arguments` that keep
+references to the arguments and compare them after the call. Three of the four fail on upstream
+`main` and pass with the change. The package's own suite goes from 104 to 108 passing.
+
+The PR also notes two things found while working on it but deliberately left alone: the `outputs`
+array is spliced in place by design, and `jest.config.ts` cannot load on Node 22+ (`module is not
+defined in ES module scope`), so upstream's `npm test` does not run on a current Node at all.
 
 Repro script also at `scripts/silent-pay-repro.mjs`.
